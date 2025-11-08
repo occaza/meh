@@ -1,18 +1,25 @@
 // src/lib/server/pakasir.ts
+import { PAKASIR_SLUG, PAKASIR_API_KEY, IS_PRODUCTION } from '$env/static/private';
+
 const PAKASIR_BASE = 'https://app.pakasir.com';
 
 export type PaymentMethod = 'qris' | 'va_bca' | 'va_bri' | 'va_bni' | 'va_mandiri';
 
 function getEnv() {
-	const SLUG = import.meta.env.PAKASIR_SLUG;
-	const API_KEY = import.meta.env.PAKASIR_API_KEY;
-	const IS_PROD = import.meta.env.IS_PRODUCTION === 'true';
-
-	if (!SLUG || !API_KEY) {
-		throw new Error('Missing Pakasir environment variables. Set PAKASIR_SLUG and PAKASIR_API_KEY');
+	if (!PAKASIR_SLUG || !PAKASIR_API_KEY) {
+		throw new Error(
+			'Missing Pakasir credentials!\n\n' +
+				'Create .env file with:\n' +
+				'PAKASIR_SLUG=your-slug\n' +
+				'PAKASIR_API_KEY=pak_test_xxxxx'
+		);
 	}
 
-	return { SLUG, API_KEY, IS_PROD };
+	return {
+		SLUG: PAKASIR_SLUG,
+		API_KEY: PAKASIR_API_KEY,
+		IS_PROD: IS_PRODUCTION === 'true'
+	};
 }
 
 export const pakasir = {
