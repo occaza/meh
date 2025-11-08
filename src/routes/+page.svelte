@@ -10,16 +10,18 @@
 	let qrImageUrl = '';
 	let pollingInterval: any;
 
-	onMount(async () => {
-		try {
-			const res = await fetch('/api/products');
-			const data = await res.json();
-			products = data;
-		} catch (error) {
-			console.error('Failed to fetch products:', error);
-		} finally {
-			loading = false;
-		}
+	onMount(() => {
+		(async () => {
+			try {
+				const res = await fetch('/api/products');
+				const data = await res.json();
+				products = data;
+			} catch (error) {
+				console.error('Failed to fetch products:', error);
+			} finally {
+				loading = false;
+			}
+		})();
 
 		return () => {
 			if (pollingInterval) clearInterval(pollingInterval);
@@ -35,30 +37,20 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					product_id: productId,
-					order_id: orderId,
-					payment_method: 'qris'
+					order_id: orderId
 				})
 			});
 
 			const data = await res.json();
 
-			if (data.error) {
-				alert(data.error);
-				return;
+			if (data.redirectUrl) {
+				window.location.href = data.redirectUrl;
+			} else {
+				alert('Gagal membuat transaksi.');
 			}
-
-			paymentData = data;
-
-			qrImageUrl = await QRCode.toDataURL(data.payment_number, {
-				width: 300,
-				margin: 2
-			});
-
-			showPayment = true;
-			startPolling(orderId);
 		} catch (error) {
 			console.error('Checkout error:', error);
-			alert('Terjadi kesalahan. Silakan coba lagi.');
+			alert('Terjadi kesalahan.');
 		}
 	}
 

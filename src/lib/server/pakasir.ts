@@ -3,16 +3,22 @@ import { PAKASIR_SLUG, PAKASIR_API_KEY, IS_PRODUCTION } from '$env/static/privat
 
 const PAKASIR_BASE = 'https://app.pakasir.com';
 
-export type PaymentMethod = 'qris' | 'va_bca' | 'va_bri' | 'va_bni' | 'va_mandiri';
+export type PaymentMethod =
+	| 'qris'
+	| 'bni_va'
+	| 'bri_va'
+	| 'cimb_niaga_va'
+	| 'sampoerna_va'
+	| 'bnc_va'
+	| 'maybank_va'
+	| 'permata_va'
+	| 'atm_bersama_va'
+	| 'artha_graha_va'
+	| 'retail';
 
 function getEnv() {
 	if (!PAKASIR_SLUG || !PAKASIR_API_KEY) {
-		throw new Error(
-			'Missing Pakasir credentials!\n\n' +
-				'Create .env file with:\n' +
-				'PAKASIR_SLUG=your-slug\n' +
-				'PAKASIR_API_KEY=pak_test_xxxxx'
-		);
+		throw new Error('Missing Pakasir credentials!');
 	}
 
 	return {
@@ -26,32 +32,67 @@ export const pakasir = {
 	async createTransaction(orderId: string, amount: number, paymentMethod: PaymentMethod) {
 		const { SLUG, API_KEY } = getEnv();
 
-		const res = await fetch(`${PAKASIR_BASE}/api/payment`, {
+		const endpoint = `${PAKASIR_BASE}/api/transactioncreate/${paymentMethod}`;
+
+		console.log('Creating transaction:', { endpoint, orderId, amount, paymentMethod });
+
+		const res = await fetch(endpoint, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${API_KEY}`
+				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
 				project: SLUG,
 				order_id: orderId,
 				amount,
-				payment_method: paymentMethod
+				api_key: API_KEY
 			})
 		});
 
 		if (!res.ok) {
 			const text = await res.text();
+			console.error('Pakasir API error:', res.status, text);
 			throw new Error(`Pakasir API failed: ${res.status} ${text}`);
 		}
 
-		return await res.json();
+		const data = await res.json();
+		console.log('Pakasir response:', data);
+
+		return data.payment;
+	},
+
+	async getTransactionDetail(orderId: string, amount: number) {
+		const { SLUG, API_KEY } = getEnv();
+
+		const params = new URLSearchParams({
+			project: SLUG,
+			order_id: orderId,
+			amount: amount.toString(),
+			api_key: API_KEY
+		});
+
+		const url = `${PAKASIR_BASE}/api/transactiondetail?${params.toString()}`;
+
+		const res = await fetch(url);
+
+		if (!res.ok) {
+			const text = await res.text();
+			throw new Error(`Failed to get transaction detail: ${res.status} ${text}`);
+		}
+
+		const data = await res.json();
+		return data.transaction;
 	},
 
 	async simulatePayment(orderId: string, amount: number): Promise<void> {
 		const { SLUG, API_KEY, IS_PROD } = getEnv();
 
-		if (IS_PROD) return;
+		if (IS_PROD) {
+			console.log('Skipping payment simulation in production mode');
+			return;
+		}
+
+		console.log('Simulating payment for:', orderId);
 
 		const res = await fetch(`${PAKASIR_BASE}/api/paymentsimulation`, {
 			method: 'POST',
@@ -68,5 +109,7 @@ export const pakasir = {
 			const text = await res.text();
 			throw new Error(`Pakasir simulation failed: ${res.status} ${text}`);
 		}
+
+		console.log('Payment simulation successful');
 	}
 };
