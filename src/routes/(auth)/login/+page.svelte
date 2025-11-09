@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getSupabaseClient } from '$lib/client/supabase'; // ← Ubah import ini
+	import { getSupabaseClient } from '$lib/client/supabase';
 
-	let email = '';
-	let password = '';
-	let loading = false;
-	let error = '';
+	let email = $state('');
+	let password = $state('');
+	let loading = $state(false);
+	let error = $state('');
 
 	async function handleLogin() {
 		loading = true;
@@ -25,7 +25,21 @@
 			}
 
 			if (data.session) {
-				goto('/dashboard');
+				// Simpan tokens ke cookies via server endpoint
+				const res = await fetch('/api/auth/session', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						access_token: data.session.access_token,
+						refresh_token: data.session.refresh_token
+					})
+				});
+
+				if (res.ok) {
+					goto('/dashboard');
+				} else {
+					error = 'Gagal menyimpan session';
+				}
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Login gagal';
@@ -46,7 +60,12 @@
 				</div>
 			{/if}
 
-			<form on:submit|preventDefault={handleLogin}>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleLogin();
+				}}
+			>
 				<div class="form-control">
 					<label class="label" for="email">
 						<span class="label-text">Email</span>

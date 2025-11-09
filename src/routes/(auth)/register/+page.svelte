@@ -2,12 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { getSupabaseClient } from '$lib/client/supabase';
 
-	let email = '';
-	let password = '';
-	let confirmPassword = '';
-	let loading = false;
-	let error = '';
-	let success = false;
+	let email = $state('');
+	let password = $state('');
+	let confirmPassword = $state('');
+	let loading = $state(false);
+	let error = $state('');
+	let success = $state(false);
 
 	async function handleRegister() {
 		loading = true;
@@ -94,7 +94,12 @@
 					</div>
 				{/if}
 
-				<form on:submit|preventDefault={handleRegister}>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleRegister();
+					}}
+				>
 					<div class="form-control">
 						<label class="label" for="email">
 							<span class="label-text">Email</span>

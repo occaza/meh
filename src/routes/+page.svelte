@@ -3,16 +3,16 @@
 	import type { Product } from '$lib/types/types';
 	import QRCode from 'qrcode';
 
-	let products: Product[] = [];
-	let loading = true;
-	let showPayment = false;
-	let showMethodSelector = false;
-	let selectedProduct: Product | null = null;
-	let selectedMethod = 'qris';
-	let paymentData: any = null;
-	let qrImageUrl = '';
-	let pollingInterval: any;
-	let isSimulating = false; // Tambahkan ini
+	let products = $state<Product[]>([]);
+	let loading = $state(true);
+	let showPayment = $state(false);
+	let showMethodSelector = $state(false);
+	let selectedProduct = $state<Product | null>(null);
+	let selectedMethod = $state('qris');
+	let paymentData = $state<any>(null);
+	let qrImageUrl = $state('');
+	let pollingInterval = $state<any>(null);
+	let isSimulating = $state(false);
 
 	const paymentMethods = [
 		{ value: 'qris', label: 'QRIS (Semua E-Wallet & Bank)', icon: '📱' },
@@ -48,7 +48,7 @@
 
 	function showMethodSelection(product: Product) {
 		selectedProduct = product;
-		selectedMethod = ''; // Reset ke empty string
+		selectedMethod = '';
 		showMethodSelector = true;
 	}
 
@@ -140,7 +140,7 @@
 	function closeMethodSelector() {
 		showMethodSelector = false;
 		selectedProduct = null;
-		selectedMethod = ''; // Reset juga saat close
+		selectedMethod = '';
 	}
 
 	async function simulatePayment() {
@@ -164,12 +164,12 @@
 				alert('Simulasi berhasil! Tunggu sebentar...');
 			} else {
 				alert(data.error || 'Simulasi gagal');
-				isSimulating = false; // Reset jika gagal
+				isSimulating = false;
 			}
 		} catch (error) {
 			console.error('Simulate error:', error);
 			alert('Terjadi kesalahan saat simulasi');
-			isSimulating = false; // Reset jika error
+			isSimulating = false;
 		}
 	}
 
@@ -205,7 +205,7 @@
 						<div class="card-actions justify-end">
 							<button
 								class="btn btn-block btn-primary"
-								on:click={() => showMethodSelection(product)}
+								onclick={() => showMethodSelection(product)}
 							>
 								Beli Sekarang
 							</button>
@@ -222,13 +222,12 @@
 </div>
 
 <!-- Modal Pilih Metode Pembayaran -->
-<!-- Modal Pilih Metode Pembayaran -->
 {#if showMethodSelector && selectedProduct}
 	<div class="modal-open modal">
 		<div class="modal-box max-w-md">
 			<button
 				class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
-				on:click={closeMethodSelector}
+				onclick={closeMethodSelector}
 			>
 				✕
 			</button>
@@ -246,7 +245,7 @@
 			<!-- QRIS Button Besar -->
 			<button
 				class="btn mb-4 btn-block btn-lg btn-primary"
-				on:click={() => {
+				onclick={() => {
 					selectedMethod = 'qris';
 					checkout();
 				}}
@@ -277,7 +276,7 @@
 
 			<button
 				class="btn btn-block btn-outline"
-				on:click={checkout}
+				onclick={checkout}
 				disabled={!selectedMethod || selectedMethod === ''}
 			>
 				Lanjutkan ke Pembayaran
@@ -290,10 +289,7 @@
 {#if showPayment && paymentData}
 	<div class="modal-open modal">
 		<div class="modal-box max-w-md">
-			<button
-				class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
-				on:click={closePayment}
-			>
+			<button class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm" onclick={closePayment}>
 				✕
 			</button>
 
@@ -370,7 +366,7 @@
 						/>
 						<button
 							class="btn btn-square btn-primary"
-							on:click={() => {
+							onclick={() => {
 								navigator.clipboard.writeText(paymentData.payment_number);
 								alert('Nomor berhasil disalin!');
 							}}
@@ -404,7 +400,7 @@
 			<div class="mt-4">
 				<button
 					class="btn btn-block btn-sm btn-warning"
-					on:click={() => simulatePayment()}
+					onclick={() => simulatePayment()}
 					disabled={isSimulating}
 				>
 					{#if isSimulating}

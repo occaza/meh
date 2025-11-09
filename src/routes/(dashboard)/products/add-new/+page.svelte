@@ -7,16 +7,28 @@
 	let loading = $state(false);
 	let error = $state('');
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
+	async function handleSubmit() {
+		loading = true;
 		error = '';
 
-		if (!name || !description || price <= 0) {
-			error = 'Semua field harus diisi dengan benar';
+		// Validasi
+		if (!name.trim()) {
+			error = 'Nama produk harus diisi';
+			loading = false;
 			return;
 		}
 
-		loading = true;
+		if (!description.trim()) {
+			error = 'Deskripsi harus diisi';
+			loading = false;
+			return;
+		}
+
+		if (price <= 0) {
+			error = 'Harga harus lebih dari 0';
+			loading = false;
+			return;
+		}
 
 		try {
 			const res = await fetch('/api/admin/products', {
@@ -25,14 +37,18 @@
 				body: JSON.stringify({ name, description, price })
 			});
 
-			if (res.ok) {
-				goto('/products');
-			} else {
-				const data = await res.json();
+			const data = await res.json();
+
+			if (!res.ok) {
 				error = data.error || 'Gagal menambahkan produk';
+				return;
 			}
+
+			// Sukses, redirect ke halaman produk
+			goto('/products');
 		} catch (err) {
-			error = 'Terjadi kesalahan';
+			console.error('Submit error:', err);
+			error = err instanceof Error ? err.message : 'Terjadi kesalahan';
 		} finally {
 			loading = false;
 		}
@@ -53,11 +69,29 @@
 
 			{#if error}
 				<div class="alert alert-error">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-6 w-6 shrink-0 stroke-current"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
 					<span>{error}</span>
 				</div>
 			{/if}
 
-			<form onsubmit={handleSubmit}>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleSubmit();
+				}}
+			>
 				<div class="form-control">
 					<label class="label" for="name">
 						<span class="label-text">Nama Produk</span>
@@ -65,7 +99,7 @@
 					<input
 						id="name"
 						type="text"
-						placeholder="Contoh: Paket Hosting Premium"
+						placeholder="Contoh: Paket Premium"
 						class="input-bordered input"
 						bind:value={name}
 						required
@@ -78,7 +112,7 @@
 					</label>
 					<textarea
 						id="description"
-						placeholder="Deskripsi produk..."
+						placeholder="Jelaskan detail produk..."
 						class="textarea-bordered textarea h-24"
 						bind:value={description}
 						required
@@ -95,22 +129,27 @@
 						placeholder="50000"
 						class="input-bordered input"
 						bind:value={price}
-						min="0"
-						step="1000"
+						min="1"
+						step="1"
 						required
 					/>
-					<label class="label" for="price">
+					<div class="label">
 						<span class="label-text-alt">Masukkan harga dalam Rupiah</span>
-					</label>
+					</div>
 				</div>
 
-				<div class="mt-6 card-actions justify-end">
-					<a href="/products" class="btn btn-ghost">Batal</a>
+				<div class="divider"></div>
+
+				<div class="card-actions justify-end">
+					<button type="button" class="btn btn-ghost" onclick={() => goto('/products')}>
+						Batal
+					</button>
 					<button type="submit" class="btn btn-primary" disabled={loading}>
 						{#if loading}
 							<span class="loading loading-sm loading-spinner"></span>
 							Menyimpan...
 						{:else}
+							<span>💾</span>
 							Simpan Produk
 						{/if}
 					</button>

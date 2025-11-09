@@ -1,76 +1,90 @@
-// src/routes/api/admin/products/[id]/+server.ts
+// src/routes/api/admin/products/+server.ts
 import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
+import type { RequestHandler } from './$types';
 
-export async function GET({ params }: { params: { id: string } }) {
-	try {
-		const supabaseAdmin = getSupabaseAdmin();
-
-		const { data, error } = await supabaseAdmin
-			.from('products')
-			.select('*')
-			.eq('id', params.id)
-			.single();
-
-		if (error || !data) {
-			return json({ error: 'Product not found' }, { status: 404 });
-		}
-
-		return json(data);
-	} catch (error) {
-		console.error('Get product error:', error);
-		return json({ error: 'Internal server error' }, { status: 500 });
-	}
-}
-
-export async function PUT({ params, request }: { params: { id: string }; request: Request }) {
+// Handler untuk menambah produk baru
+export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
 		const { name, description, price } = body;
 
-		if (!name || !description || !price) {
-			return json({ error: 'Missing required fields' }, { status: 400 });
+		console.log('Received POST request:', { name, description, price });
+
+		// Validasi input
+		if (!name || !description || price === undefined) {
+			return json({ error: 'Semua field harus diisi' }, { status: 400 });
 		}
 
-		if (typeof price !== 'number' || price <= 0) {
-			return json({ error: 'Invalid price' }, { status: 400 });
+		if (typeof name !== 'string' || name.trim() === '') {
+			return json({ error: 'Nama produk tidak valid' }, { status: 400 });
+		}
+
+		if (typeof description !== 'string' || description.trim() === '') {
+			return json({ error: 'Deskripsi tidak valid' }, { status: 400 });
+		}
+
+		const priceNumber = parseInt(price.toString());
+		if (isNaN(priceNumber) || priceNumber <= 0) {
+			return json({ error: 'Harga harus lebih dari 0' }, { status: 400 });
 		}
 
 		const supabaseAdmin = getSupabaseAdmin();
 
+		// Generate ID unik
+		const id = `PROD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+		console.log('Inserting product with ID:', id);
+
 		const { data, error } = await supabaseAdmin
 			.from('products')
-			.update({ name, description, price })
-			.eq('id', params.id)
+			.insert({
+				id,
+				name: name.trim(),
+				description: description.trim(),
+				price: priceNumber
+			})
 			.select()
 			.single();
 
 		if (error) {
-			console.error('Update error:', error);
-			return json({ error: 'Failed to update product' }, { status: 500 });
+			console.error('Insert product error:', error);
+			return json({ error: 'Gagal menambahkan produk: ' + error.message }, { status: 500 });
 		}
 
-		return json(data);
-	} catch (error) {
-		console.error('Update product error:', error);
-		return json({ error: 'Internal server error' }, { status: 500 });
-	}
-}
+		console.log('Product created successfully:', data);
 
-export async function DELETE({ params }: { params: { id: string } }) {
+		return json(data, { status: 201 });
+	} catch (error) {
+		console.error('Add product error:', error);
+		return json(
+			{
+				error: 'Internal server error',
+				message: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+// Handler untuk mendapatkan semua produk (optional, sudah ada di /api/products)
+export const GET: RequestHandler = async () => {
 	try {
 		const supabaseAdmin = getSupabaseAdmin();
 
-		const { error } = await supabaseAdmin.from('products').delete().eq('id', params.id);
+		const { data, error } = await supabaseAdmin
+			.from('products')
+			.select('id, name, price, description')
+			.order('created_at', { ascending: false });
 
 		if (error) {
-			console.error('Delete error:', error);
-			return json({ error: 'Failed to delete product' }, { status: 500 });
+			console.error('Fetch products error:', error);
+			return json({ error: 'Failed to fetch products' }, { status: 500 });
 		}
 
-		return json({ success: true });
+		return json(data || []);
 	} catch (error) {
-		console.error('Delete product error:', error);
+		console.error('Get products error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });
 	}
-}
+};
