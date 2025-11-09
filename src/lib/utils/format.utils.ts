@@ -27,3 +27,15 @@ export function formatShortDate(dateString: string | undefined): string {
 		minute: '2-digit'
 	});
 }
+
+// ✨ Tambahkan ini
+export function formatDiscount(percentage: number): string {
+	return `${percentage}%`;
+}
+
+export function formatStock(stock: number): string {
+	if (stock === 0) return 'Stok Habis';
+	if (stock < 10) return `Tersisa ${stock}`;
+	if (stock > 999999) return 'Unlimited';
+	return `${stock} tersedia`;
+}

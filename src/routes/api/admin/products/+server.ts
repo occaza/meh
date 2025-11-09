@@ -3,17 +3,25 @@ import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
 import type { RequestHandler } from './$types';
 
-// Handler untuk menambah produk baru
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { name, description, price } = body;
+		const {
+			name,
+			description,
+			detail_description,
+			price,
+			stock,
+			discount_percentage,
+			discount_end_date,
+			images
+		} = body;
 
-		console.log('Received POST request:', { name, description, price });
+		console.log('Received POST request:', body);
 
 		// Validasi input
-		if (!name || !description || price === undefined) {
-			return json({ error: 'Semua field harus diisi' }, { status: 400 });
+		if (!name || !description || price === undefined || stock === undefined) {
+			return json({ error: 'Field wajib harus diisi' }, { status: 400 });
 		}
 
 		if (typeof name !== 'string' || name.trim() === '') {
@@ -29,10 +37,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Harga harus lebih dari 0' }, { status: 400 });
 		}
 
+		const stockNumber = parseInt(stock.toString());
+		if (isNaN(stockNumber) || stockNumber < 0) {
+			return json({ error: 'Stok tidak boleh negatif' }, { status: 400 });
+		}
+
+		const discountNumber = discount_percentage ? parseInt(discount_percentage.toString()) : 0;
+		if (discountNumber < 0 || discountNumber > 100) {
+			return json({ error: 'Diskon harus antara 0-100%' }, { status: 400 });
+		}
+
 		const supabaseAdmin = getSupabaseAdmin();
 
 		// Generate ID unik
-		const id = `PROD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+		const id = `${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
 
 		console.log('Inserting product with ID:', id);
 
@@ -42,7 +60,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				id,
 				name: name.trim(),
 				description: description.trim(),
-				price: priceNumber
+				detail_description: detail_description?.trim() || description.trim(),
+				price: priceNumber,
+				stock: stockNumber,
+				discount_percentage: discountNumber,
+				discount_end_date: discount_end_date || null,
+				images: images || []
 			})
 			.select()
 			.single();
@@ -67,14 +90,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-// Handler untuk mendapatkan semua produk (optional, sudah ada di /api/products)
 export const GET: RequestHandler = async () => {
 	try {
 		const supabaseAdmin = getSupabaseAdmin();
 
 		const { data, error } = await supabaseAdmin
 			.from('products')
-			.select('id, name, price, description')
+			.select('*')
 			.order('created_at', { ascending: false });
 
 		if (error) {
