@@ -12,6 +12,7 @@
 	let paymentData: any = null;
 	let qrImageUrl = '';
 	let pollingInterval: any;
+	let isSimulating = false; // Tambahkan ini
 
 	const paymentMethods = [
 		{ value: 'qris', label: 'QRIS (Semua E-Wallet & Bank)', icon: '📱' },
@@ -27,16 +28,18 @@
 		{ value: 'retail', label: 'Retail (Indomaret/Alfamart)', icon: '🏪' }
 	];
 
-	onMount(async () => {
-		try {
-			const res = await fetch('/api/products');
-			const data = await res.json();
-			products = data;
-		} catch (error) {
-			console.error('Failed to fetch products:', error);
-		} finally {
-			loading = false;
-		}
+	onMount(() => {
+		(async () => {
+			try {
+				const res = await fetch('/api/products');
+				const data = await res.json();
+				products = data;
+			} catch (error) {
+				console.error('Failed to fetch products:', error);
+			} finally {
+				loading = false;
+			}
+		})();
 
 		return () => {
 			if (pollingInterval) clearInterval(pollingInterval);
@@ -45,6 +48,7 @@
 
 	function showMethodSelection(product: Product) {
 		selectedProduct = product;
+		selectedMethod = ''; // Reset ke empty string
 		showMethodSelector = true;
 	}
 
@@ -136,11 +140,13 @@
 	function closeMethodSelector() {
 		showMethodSelector = false;
 		selectedProduct = null;
-		selectedMethod = 'qris';
+		selectedMethod = ''; // Reset juga saat close
 	}
 
 	async function simulatePayment() {
-		if (!paymentData) return;
+		if (!paymentData || isSimulating) return;
+
+		isSimulating = true;
 
 		try {
 			const res = await fetch('/api/simulate-payment', {
@@ -158,10 +164,12 @@
 				alert('Simulasi berhasil! Tunggu sebentar...');
 			} else {
 				alert(data.error || 'Simulasi gagal');
+				isSimulating = false; // Reset jika gagal
 			}
 		} catch (error) {
 			console.error('Simulate error:', error);
 			alert('Terjadi kesalahan saat simulasi');
+			isSimulating = false; // Reset jika error
 		}
 	}
 
@@ -214,9 +222,10 @@
 </div>
 
 <!-- Modal Pilih Metode Pembayaran -->
+<!-- Modal Pilih Metode Pembayaran -->
 {#if showMethodSelector && selectedProduct}
 	<div class="modal-open modal">
-		<div class="modal-box max-w-lg">
+		<div class="modal-box max-w-md">
 			<button
 				class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
 				on:click={closeMethodSelector}
@@ -226,7 +235,7 @@
 
 			<h3 class="mb-4 text-lg font-bold">Pilih Metode Pembayaran</h3>
 
-			<div class="mb-4 rounded-lg bg-base-200 p-4">
+			<div class="mb-6 rounded-lg bg-base-200 p-4">
 				<div class="text-sm text-base-content/70">Produk:</div>
 				<div class="font-semibold">{selectedProduct.name}</div>
 				<div class="mt-2 text-xl font-bold text-primary">
@@ -234,29 +243,45 @@
 				</div>
 			</div>
 
-			<div class="space-y-2">
-				{#each paymentMethods as method}
-					<label
-						class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-base-200"
-					>
-						<input
-							type="radio"
-							name="payment_method"
-							value={method.value}
-							bind:group={selectedMethod}
-							class="radio radio-primary"
-						/>
-						<span class="text-2xl">{method.icon}</span>
-						<span class="flex-1">{method.label}</span>
-					</label>
-				{/each}
-			</div>
+			<!-- QRIS Button Besar -->
+			<button
+				class="btn mb-4 btn-block btn-lg btn-primary"
+				on:click={() => {
+					selectedMethod = 'qris';
+					checkout();
+				}}
+			>
+				<span class="text-2xl">📱</span>
+				<div class="text-left">
+					<div class="font-bold">QRIS</div>
+					<div class="text-xs opacity-70">Semua E-Wallet & Bank</div>
+				</div>
+			</button>
 
-			<div class="modal-action">
-				<button class="btn btn-block btn-primary" on:click={checkout}>
-					Lanjutkan Pembayaran
-				</button>
-			</div>
+			<div class="divider text-sm">Atau pilih metode lain</div>
+
+			<!-- Dropdown untuk metode lain -->
+			<select class="select-bordered select mb-4 w-full" bind:value={selectedMethod}>
+				<option value="" disabled selected>Pilih Virtual Account atau Retail</option>
+				<option value="bni_va">🏦 Virtual Account BNI</option>
+				<option value="bri_va">🏦 Virtual Account BRI</option>
+				<option value="cimb_niaga_va">🏦 Virtual Account CIMB Niaga</option>
+				<option value="permata_va">🏦 Virtual Account Permata</option>
+				<option value="sampoerna_va">🏦 Virtual Account Sampoerna</option>
+				<option value="maybank_va">🏦 Virtual Account Maybank</option>
+				<option value="bnc_va">🏦 Virtual Account BNC</option>
+				<option value="atm_bersama_va">🏦 Virtual Account ATM Bersama</option>
+				<option value="artha_graha_va">🏦 Virtual Account Artha Graha</option>
+				<option value="retail">🏪 Retail (Indomaret/Alfamart)</option>
+			</select>
+
+			<button
+				class="btn btn-block btn-outline"
+				on:click={checkout}
+				disabled={!selectedMethod || selectedMethod === ''}
+			>
+				Lanjutkan ke Pembayaran
+			</button>
 		</div>
 	</div>
 {/if}
@@ -286,6 +311,11 @@
 					<span class="text-xl font-bold text-primary">
 						Rp{paymentData.total_payment.toLocaleString('id-ID')}
 					</span>
+				</div>
+
+				<div class="mb-1 flex justify-between text-sm text-base-content/70">
+					<span>Harga Produk:</span>
+					<span>Rp{selectedProduct?.price.toLocaleString('id-ID')}</span>
 				</div>
 				<div class="mb-1 flex justify-between text-sm text-base-content/70">
 					<span>Biaya Admin:</span>
@@ -372,8 +402,17 @@
 			{/if}
 
 			<div class="mt-4">
-				<button class="btn btn-block btn-sm btn-warning" on:click={() => simulatePayment()}>
-					🧪 Simulasi Pembayaran (Development Only)
+				<button
+					class="btn btn-block btn-sm btn-warning"
+					on:click={() => simulatePayment()}
+					disabled={isSimulating}
+				>
+					{#if isSimulating}
+						<span class="loading loading-sm loading-spinner"></span>
+						Memproses simulasi...
+					{:else}
+						🧪 Simulasi Pembayaran (Development Only)
+					{/if}
 				</button>
 			</div>
 

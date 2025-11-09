@@ -4,12 +4,7 @@ import { VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE } from '$env/static/private';
 
 export function getSupabaseAdmin() {
 	if (!VITE_SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-		throw new Error(
-			'❌ Missing Supabase credentials!\n\n' +
-				'Create .env file with:\n' +
-				'VITE_SUPABASE_URL=https://xxxxx.supabase.co\n' +
-				'SUPABASE_SERVICE_ROLE=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-		);
+		throw new Error('Missing Supabase credentials!');
 	}
 
 	return createClient(VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE, {

@@ -37,6 +37,7 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
+		"@supabase/ssr": "^0.7.0",
 		"@supabase/supabase-js": "^2.80.0",
 		"daisyui": "^5.4.7",
 		"qrcode": "^1.5.4"
