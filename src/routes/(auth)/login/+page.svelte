@@ -1,11 +1,24 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { getSupabaseClient } from '$lib/client/supabase';
+	import { onMount } from 'svelte';
 
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
 	let error = $state('');
+
+	onMount(async () => {
+		const supabase = getSupabaseClient();
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
+
+		// Jika sesi sudah ada, redirect langsung
+		if (session) {
+			await goto('/dashboard');
+		}
+	});
 
 	async function handleLogin() {
 		loading = true;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Navbar from '$lib/components/shared/Navbar.svelte';
 	import { cartCount } from '$lib/stores/cart.store';
 	const features = [
 		{
@@ -20,42 +21,8 @@
 </script>
 
 <div class="min-h-screen">
-	<!-- Navbar -->
-	<div class="navbar fixed top-0 z-50 bg-base-100/80 shadow-lg backdrop-blur-sm">
-		<div class="container mx-auto">
-			<div class="flex-1">
-				<a href="/" class="btn text-xl btn-ghost">
-					<span class="text-2xl">🛒</span>
-					Toko Digital
-				</a>
-			</div>
-			<div class="flex-none gap-2">
-				<a href="/shop" class="btn btn-ghost">Belanja</a>
-				<a href="/cart" class="btn btn-circle btn-ghost">
-					<div class="indicator">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-							/>
-						</svg>
-						{#if $cartCount > 0}
-							<span class="indicator-item badge badge-sm badge-primary">{$cartCount}</span>
-						{/if}
-					</div>
-				</a>
-				<a href="/login" class="btn btn-ghost">Admin</a>
-			</div>
-		</div>
-	</div>
+	<Navbar />
+
 	<!-- Hero Section -->
 	<div class="hero min-h-[80vh] bg-linear-to-br from-primary to-secondary">
 		<div class="hero-content text-center text-primary-content">

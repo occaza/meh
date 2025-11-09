@@ -1,41 +1,94 @@
-// src/routes/api/products/+server.ts
+// src/routes/api/admin/products/+server.ts
 import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
-import type { Product } from '$lib/types/types';
+import { requireRole } from '$lib/server/auth';
+import type { RequestHandler } from './$types';
 
-export async function GET() {
+// Handler untuk menambah produk baru
+export const POST: RequestHandler = async ({ request, cookies }) => {
+	try {
+		// Require admin or superadmin role
+		await requireRole(cookies, ['admin', 'superadmin']);
+
+		const body = await request.json();
+		const { name, description, price } = body;
+
+		console.log('Received POST request:', { name, description, price });
+
+		// Validasi input
+		if (!name || !description || price === undefined) {
+			return json({ error: 'Semua field harus diisi' }, { status: 400 });
+		}
+
+		if (typeof name !== 'string' || name.trim() === '') {
+			return json({ error: 'Nama produk tidak valid' }, { status: 400 });
+		}
+
+		if (typeof description !== 'string' || description.trim() === '') {
+			return json({ error: 'Deskripsi tidak valid' }, { status: 400 });
+		}
+
+		const priceNumber = parseInt(price.toString());
+		if (isNaN(priceNumber) || priceNumber <= 0) {
+			return json({ error: 'Harga harus lebih dari 0' }, { status: 400 });
+		}
+
+		const supabaseAdmin = getSupabaseAdmin();
+
+		// Generate ID unik
+		const id = `PROD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+		console.log('Inserting product with ID:', id);
+
+		const { data, error } = await supabaseAdmin
+			.from('products')
+			.insert({
+				id,
+				name: name.trim(),
+				description: description.trim(),
+				price: priceNumber
+			})
+			.select()
+			.single();
+
+		if (error) {
+			console.error('Insert product error:', error);
+			return json({ error: 'Gagal menambahkan produk: ' + error.message }, { status: 500 });
+		}
+
+		console.log('Product created successfully:', data);
+
+		return json(data, { status: 201 });
+	} catch (error) {
+		console.error('Add product error:', error);
+		return json(
+			{
+				error: 'Internal server error',
+				message: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+// Handler untuk mendapatkan semua produk (optional, sudah ada di /api/products)
+export const GET: RequestHandler = async () => {
 	try {
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Select ALL fields yang dibutuhkan
 		const { data, error } = await supabaseAdmin
 			.from('products')
-			.select(
-				'id, name, price, description, detail_description, images, stock, discount_percentage, discount_end_date, created_at'
-			)
+			.select('id, name, price, description')
 			.order('created_at', { ascending: false });
 
 		if (error) {
-			console.error('Supabase query error:', error);
+			console.error('Fetch products error:', error);
 			return json({ error: 'Failed to fetch products' }, { status: 500 });
 		}
 
-		console.log('Products fetched:', data?.length || 0);
-
-		// Log first product untuk debug
-		if (data && data.length > 0) {
-			console.log('First product sample:', {
-				name: data[0].name,
-				stock: data[0].stock,
-				stockType: typeof data[0].stock,
-				images: data[0].images,
-				imagesType: typeof data[0].images
-			});
-		}
-
-		return json(data as Product[]);
-	} catch (err) {
-		console.error('Unexpected error in /api/products:', err);
+		return json(data || []);
+	} catch (error) {
+		console.error('Get products error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });
 	}
-}
+};

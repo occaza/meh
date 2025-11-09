@@ -2,9 +2,16 @@
 import { getSupabaseAdmin } from './supabase';
 import type { Cookies } from '@sveltejs/kit';
 
-export async function getUser(cookies: Cookies) {
+export type UserRole = 'superadmin' | 'admin' | 'user';
+
+export type UserWithRole = {
+	id: string;
+	email: string | undefined;
+	role: UserRole;
+};
+
+export async function getUser(cookies: Cookies): Promise<UserWithRole | null> {
 	const accessToken = cookies.get('sb-access-token');
-	const refreshToken = cookies.get('sb-refresh-token');
 
 	if (!accessToken) {
 		return null;
@@ -18,10 +25,23 @@ export async function getUser(cookies: Cookies) {
 		return null;
 	}
 
-	return data.user;
+	// Get user role
+	const { data: roleData } = await supabase
+		.from('user_roles')
+		.select('role')
+		.eq('user_id', data.user.id)
+		.single();
+
+	const role: UserRole = roleData?.role || 'user';
+
+	return {
+		id: data.user.id,
+		email: data.user.email,
+		role
+	};
 }
 
-export async function requireAuth(cookies: Cookies) {
+export async function requireAuth(cookies: Cookies): Promise<UserWithRole> {
 	const user = await getUser(cookies);
 
 	if (!user) {
@@ -29,4 +49,30 @@ export async function requireAuth(cookies: Cookies) {
 	}
 
 	return user;
+}
+
+export async function requireRole(
+	cookies: Cookies,
+	allowedRoles: UserRole[]
+): Promise<UserWithRole> {
+	const user = await requireAuth(cookies);
+
+	if (!allowedRoles.includes(user.role)) {
+		throw new Error('Forbidden: Insufficient permissions');
+	}
+
+	return user;
+}
+
+// Helper functions
+export function isSuperAdmin(user: UserWithRole | null): boolean {
+	return user?.role === 'superadmin';
+}
+
+export function isAdmin(user: UserWithRole | null): boolean {
+	return user?.role === 'admin' || user?.role === 'superadmin';
+}
+
+export function isUser(user: UserWithRole | null): boolean {
+	return user?.role === 'user';
 }

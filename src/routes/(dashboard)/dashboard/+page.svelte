@@ -33,7 +33,19 @@
 			<span class="loading loading-lg loading-spinner"></span>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
+			<div class="stats shadow">
+				<div class="stat">
+					<div class="stat-figure text-accent">
+						<span class="text-4xl">💰</span>
+					</div>
+					<div class="stat-title">Total Pendapatan</div>
+					<div class="stat-value text-accent">
+						{formatCurrency(stats.totalRevenue)}
+					</div>
+					<div class="stat-desc">Dari transaksi yang selesai</div>
+				</div>
+			</div>
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-primary">
@@ -71,19 +83,6 @@
 					</div>
 					<div class="stat-title">Transaksi Pending</div>
 					<div class="stat-value text-warning">{stats.pendingTransactions}</div>
-				</div>
-			</div>
-
-			<div class="stats shadow md:col-span-2">
-				<div class="stat">
-					<div class="stat-figure text-accent">
-						<span class="text-4xl">💰</span>
-					</div>
-					<div class="stat-title">Total Pendapatan</div>
-					<div class="stat-value text-accent">
-						{formatCurrency(stats.totalRevenue)}
-					</div>
-					<div class="stat-desc">Dari transaksi yang selesai</div>
 				</div>
 			</div>
 		</div>

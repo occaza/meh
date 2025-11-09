@@ -3,17 +3,49 @@
 	import { page } from '$app/stores';
 	import { getSupabaseClient } from '$lib/client/supabase';
 
-	let { children } = $props();
+	let { data, children } = $props();
+
+	const user = $derived(data.user);
+	const isSuperAdmin = $derived(user.role === 'superadmin');
 
 	const menuItems = [
-		{ href: '/dashboard', icon: '📊', label: 'Dashboard' },
-		{ href: '/products', icon: '📦', label: 'Produk' },
-		{ href: '/transaction', icon: '💳', label: 'Transaksi' }
+		{ href: '/dashboard', icon: '📊', label: 'Dashboard', roles: ['superadmin', 'admin'] },
+		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin', 'admin'] },
+		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin', 'admin'] },
+		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] } // Only superadmin
 	];
+
+	const visibleMenuItems = $derived(menuItems.filter((item) => item.roles.includes(user.role)));
+
+	function getRoleBadgeClass(role: string) {
+		switch (role) {
+			case 'superadmin':
+				return 'badge-error';
+			case 'admin':
+				return 'badge-warning';
+			default:
+				return 'badge-ghost';
+		}
+	}
+
+	function getRoleLabel(role: string) {
+		switch (role) {
+			case 'superadmin':
+				return 'Super Admin';
+			case 'admin':
+				return 'Admin';
+			default:
+				return 'User';
+		}
+	}
 
 	async function handleLogout() {
 		const supabase = getSupabaseClient();
 		await supabase.auth.signOut();
+
+		// Hapus cookies via server endpoint
+		await fetch('/api/auth/session', { method: 'DELETE' });
+
 		goto('/login');
 	}
 </script>
@@ -54,10 +86,21 @@
 		<div class="menu min-h-full w-80 bg-base-200 p-4 text-base-content">
 			<div class="mb-8 px-4 py-6">
 				<h2 class="text-2xl font-bold">Admin Panel</h2>
+
+				<!-- User Info with Role Badge -->
+				<div class="mt-4 rounded-lg bg-base-300 p-3">
+					<div class="mb-1 text-sm text-base-content/70">Logged in as:</div>
+					<div class="font-semibold">{user.email}</div>
+					<div class="mt-2">
+						<span class="badge {getRoleBadgeClass(user.role)}">
+							{getRoleLabel(user.role)}
+						</span>
+					</div>
+				</div>
 			</div>
 
 			<ul class="space-y-2">
-				{#each menuItems as item}
+				{#each visibleMenuItems as item}
 					<li>
 						<a
 							href={item.href}
