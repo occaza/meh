@@ -11,6 +11,7 @@
 	const menuItems = [
 		{ href: '/dashboard', icon: '📊', label: 'Dashboard', roles: ['superadmin', 'admin'] },
 		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin', 'admin'] },
+		{ href: '/coupons', icon: '🎟️', label: 'Kupon', roles: ['superadmin', 'admin'] }, // ✨ Tambah ini
 		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin', 'admin'] },
 		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] } // Only superadmin
 	];
