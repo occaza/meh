@@ -27,7 +27,7 @@
 	let pollingInterval = $state<any>(null);
 	let isSimulating = $state(false);
 
-	const productSlug = $derived($page.params.slug); // Ganti dari id ke slug
+	const productId = $derived($page.params.id);
 	const hasDiscount = $derived(product ? isDiscountActive(product) : false);
 	const finalPrice = $derived(product ? calculateDiscountedPrice(product) : 0);
 	const inStock = $derived(product ? isInStock(product, quantity) : false);
@@ -42,7 +42,7 @@
 
 	async function loadProduct() {
 		try {
-			const res = await fetch(`/api/products/${productSlug}`); // Pakai slug
+			const res = await fetch(`/api/products/${productId}`);
 			if (res.ok) {
 				product = await res.json();
 			} else {
