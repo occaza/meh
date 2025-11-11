@@ -1,7 +1,13 @@
 // src/lib/utils/upload.utils.ts
 import { getSupabaseClient } from '$lib/client/supabase';
 
-export async function uploadProductImage(file: File): Promise<string | null> {
+export type UploadResult = {
+	success: boolean;
+	url?: string;
+	error?: string;
+};
+
+export async function uploadProductImage(file: File): Promise<UploadResult> {
 	try {
 		const supabase = getSupabaseClient();
 
@@ -9,15 +15,20 @@ export async function uploadProductImage(file: File): Promise<string | null> {
 		const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 		if (!allowedTypes.includes(file.type)) {
 			console.error('Invalid file type:', file.type);
-			alert('Format file tidak didukung. Gunakan JPG, PNG, atau WEBP');
-			return null;
+			return {
+				success: false,
+				error: `Format file tidak didukung: ${file.name}. Gunakan JPG, PNG, atau WEBP`
+			};
 		}
 
 		// Validasi file size (max 5MB)
 		const maxSize = 5 * 1024 * 1024; // 5MB
 		if (file.size > maxSize) {
-			alert('Ukuran file terlalu besar. Maksimal 5MB');
-			return null;
+			const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+			return {
+				success: false,
+				error: `File terlalu besar: ${file.name} (${sizeMB}MB). Maksimal 5MB`
+			};
 		}
 
 		// Generate unique filename
@@ -38,16 +49,22 @@ export async function uploadProductImage(file: File): Promise<string | null> {
 		if (uploadError) {
 			console.error('Upload error:', uploadError);
 
-			// Handle specific errors
 			if (uploadError.message.includes('row-level security')) {
-				alert('Error: Anda tidak memiliki akses untuk upload gambar. Pastikan Anda sudah login.');
+				return {
+					success: false,
+					error: 'Anda tidak memiliki akses untuk upload gambar. Pastikan Anda sudah login.'
+				};
 			} else if (uploadError.message.includes('duplicate')) {
-				alert('File dengan nama yang sama sudah ada. Coba lagi.');
+				return {
+					success: false,
+					error: `File dengan nama yang sama sudah ada: ${file.name}`
+				};
 			} else {
-				alert(`Upload gagal: ${uploadError.message}`);
+				return {
+					success: false,
+					error: `Upload gagal: ${uploadError.message}`
+				};
 			}
-
-			return null;
 		}
 
 		console.log('Upload success:', data);
@@ -59,11 +76,16 @@ export async function uploadProductImage(file: File): Promise<string | null> {
 
 		console.log('Public URL:', publicUrl);
 
-		return publicUrl;
+		return {
+			success: true,
+			url: publicUrl
+		};
 	} catch (error) {
 		console.error('Upload failed:', error);
-		alert('Terjadi kesalahan saat upload gambar');
-		return null;
+		return {
+			success: false,
+			error: 'Terjadi kesalahan saat upload gambar'
+		};
 	}
 }
 
@@ -71,7 +93,6 @@ export async function deleteProductImage(imageUrl: string): Promise<boolean> {
 	try {
 		const supabase = getSupabaseClient();
 
-		// Extract path from URL
 		const url = new URL(imageUrl);
 		const pathMatch = url.pathname.match(/\/product-images\/(.+)$/);
 
