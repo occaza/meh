@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getSupabaseClient } from '$lib/client/supabase';
+	// import { getSupabaseClient } from '$lib/client/supabase';
+	import { getSupabaseClient } from '$lib';
 	import { onMount } from 'svelte';
 
 	let email = $state('');
