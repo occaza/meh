@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { cart_items, order_id, payment_method = 'qris' } = body;
+		const { cart_items, order_id, payment_method = 'qris', user_id } = body;
 
 		if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
 			return json({ error: 'Cart items required' }, { status: 400 });
@@ -16,9 +16,12 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Invalid order_id' }, { status: 400 });
 		}
 
+		if (!user_id || typeof user_id !== 'string') {
+			return json({ error: 'User ID required' }, { status: 400 });
+		}
+
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Validasi semua produk dan hitung total
 		let calculatedTotal = 0;
 		const productIds = cart_items.map((item: any) => item.product_id);
 
@@ -31,7 +34,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Failed to fetch products' }, { status: 500 });
 		}
 
-		// Validasi dan hitung total
 		for (const item of cart_items) {
 			const product = products.find((p) => p.id === item.product_id);
 			if (!product) {
@@ -48,14 +50,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			calculatedTotal += product.price * item.quantity;
 		}
 
-		// Insert transaction untuk setiap product dengan order_id yang sama
 		const transactionInserts = cart_items.map((item: any) => {
 			const product = products.find((p) => p.id === item.product_id);
 			return {
 				order_id: order_id,
 				product_id: item.product_id,
 				amount: product!.price * item.quantity,
-				status: 'pending'
+				status: 'pending',
+				user_id // Tambah ini
 			};
 		});
 
@@ -68,7 +70,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Failed to create transactions' }, { status: 500 });
 		}
 
-		// Create payment dengan total amount
 		const payment = await pakasir.createTransaction(
 			order_id,
 			calculatedTotal,
@@ -77,9 +78,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		return json({
 			order_id: payment.order_id,
-			amount: calculatedTotal, // Total belanja sebelum fee
+			amount: calculatedTotal,
 			fee: payment.fee,
-			total_payment: payment.total_payment, // Total yang harus dibayar (amount + fee)
+			total_payment: payment.total_payment,
 			payment_method: payment.payment_method,
 			payment_number: payment.payment_number,
 			expired_at: payment.expired_at

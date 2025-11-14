@@ -96,7 +96,7 @@
 	}
 
 	async function processCheckout(method: string) {
-		if (!product) return;
+		if (!product || !user) return;
 
 		selectedMethod = method;
 		const today = new Date();
@@ -112,7 +112,8 @@
 				body: JSON.stringify({
 					product_id: product.id,
 					order_id: orderId,
-					payment_method: method
+					payment_method: method,
+					user_id: user.id // Tambah ini
 				})
 			});
 

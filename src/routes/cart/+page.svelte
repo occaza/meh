@@ -129,6 +129,8 @@
 	}
 
 	async function processCheckout(method: string) {
+		if (!user) return;
+
 		selectedMethod = method;
 		checkoutLoading = true;
 		showMethodSelector = false;
@@ -153,7 +155,8 @@
 					})),
 					order_id: orderId,
 					payment_method: method,
-					total_amount: totalAmount
+					total_amount: totalAmount,
+					user_id: user.id // Tambah ini
 				})
 			});
 

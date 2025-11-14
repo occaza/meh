@@ -7,9 +7,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { product_id, order_id, payment_method = 'qris' } = body;
-
-		// console.log('Checkout request:', { product_id, order_id, payment_method });
+		const { product_id, order_id, payment_method = 'qris', user_id } = body;
 
 		if (!product_id || typeof product_id !== 'string') {
 			return json({ error: 'Invalid or missing product_id' }, { status: 400 });
@@ -17,6 +15,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (!order_id || typeof order_id !== 'string') {
 			return json({ error: 'Invalid or missing order_id' }, { status: 400 });
+		}
+
+		if (!user_id || typeof user_id !== 'string') {
+			return json({ error: 'User ID required' }, { status: 400 });
 		}
 
 		if (!/^[a-zA-Z0-9_-]{5,100}$/.test(order_id)) {
@@ -57,7 +59,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				order_id,
 				product_id,
 				amount,
-				status: 'pending'
+				status: 'pending',
+				user_id // Tambah ini
 			});
 
 			if (insertError) {
