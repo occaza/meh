@@ -50,6 +50,21 @@ export const POST: RequestHandler = async ({ request }) => {
 			calculatedTotal += product.price * item.quantity;
 		}
 
+		// Create payment via Pakasir
+		console.log('Creating cart payment via Pakasir:', {
+			order_id,
+			calculatedTotal,
+			payment_method
+		});
+		const payment = await pakasir.createTransaction(
+			order_id,
+			calculatedTotal,
+			payment_method as PaymentMethod
+		);
+
+		console.log('Payment created:', payment);
+
+		// Insert transactions with payment info
 		const transactionInserts = cart_items.map((item: any) => {
 			const product = products.find((p) => p.id === item.product_id);
 			return {
@@ -57,7 +72,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				product_id: item.product_id,
 				amount: product!.price * item.quantity,
 				status: 'pending',
-				user_id // Tambah ini
+				user_id,
+				payment_method: payment.payment_method,
+				payment_number: payment.payment_number,
+				fee: payment.fee,
+				total_payment: payment.total_payment,
+				expired_at: payment.expired_at
 			};
 		});
 
@@ -69,12 +89,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.error('Failed to insert transactions:', insertError);
 			return json({ error: 'Failed to create transactions' }, { status: 500 });
 		}
-
-		const payment = await pakasir.createTransaction(
-			order_id,
-			calculatedTotal,
-			payment_method as PaymentMethod
-		);
 
 		return json({
 			order_id: payment.order_id,

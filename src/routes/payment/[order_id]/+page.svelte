@@ -9,39 +9,79 @@
 	let paymentData = $state<any>(null);
 	let qrImageUrl = $state('');
 	let loading = $state(true);
+	let error = $state('');
 	let pollingInterval: any = null;
 	let isSimulating = $state(false);
+	let debugInfo = $state('');
 
 	const orderId = $derived($page.params.order_id);
 
-	onMount(() => {
+	onMount(async () => {
 		if (!browser) return;
 
-		loadPaymentData();
-		startPolling();
+		debugInfo = 'Starting to load payment data...';
+		await loadPaymentData();
 
-		return () => {
-			if (pollingInterval) {
-				clearInterval(pollingInterval);
-				pollingInterval = null;
-			}
-		};
+		if (paymentData) {
+			startPolling();
+		}
+	});
+
+	function cleanup() {
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+			pollingInterval = null;
+		}
+	}
+
+	onMount(() => {
+		return cleanup;
 	});
 
 	async function loadPaymentData() {
 		try {
+			debugInfo = `Fetching /api/payment-info/${orderId}...`;
 			const res = await fetch(`/api/payment-info/${orderId}`);
+
+			debugInfo = `Response status: ${res.status}`;
+
 			if (!res.ok) {
-				goto('/my-orders');
+				const errorData = await res.json();
+				error = errorData.error || 'Failed to load payment data';
+				debugInfo = `Error: ${error}`;
+				setTimeout(() => goto('/my-orders'), 3000);
 				return;
 			}
 
 			const data = await res.json();
+			debugInfo = `Data received: ${JSON.stringify(data).substring(0, 100)}...`;
 			paymentData = data;
-			// QR akan di-generate otomatis oleh $effect di atas
-		} catch (error) {
-			console.error('Load payment error:', error);
-			goto('/my-orders');
+
+			console.log('Payment data loaded:', data);
+
+			if (data.payment_method === 'qris' && data.payment_number && browser) {
+				debugInfo = 'Generating QR code...';
+				try {
+					qrImageUrl = await QRCode.toDataURL(data.payment_number, {
+						width: 300,
+						margin: 2,
+						errorCorrectionLevel: 'M'
+					});
+					debugInfo = 'QR code generated successfully';
+					console.log('QR code generated');
+				} catch (qrError) {
+					console.error('QR generation error:', qrError);
+					debugInfo = `QR error: ${qrError}`;
+					error = 'Gagal generate QR code';
+				}
+			} else {
+				debugInfo = `Payment method: ${data.payment_method}, has number: ${!!data.payment_number}`;
+			}
+		} catch (err) {
+			console.error('Load payment error:', err);
+			error = 'Gagal memuat data pembayaran';
+			debugInfo = `Exception: ${err}`;
+			setTimeout(() => goto('/my-orders'), 3000);
 		} finally {
 			loading = false;
 		}
@@ -114,27 +154,6 @@
 		navigator.clipboard.writeText(text);
 		alert('Nomor berhasil disalin!');
 	}
-
-	$effect(() => {
-		if (
-			paymentData?.payment_method === 'qris' &&
-			paymentData.payment_number &&
-			browser &&
-			!qrImageUrl
-		) {
-			QRCode.toDataURL(paymentData.payment_number, {
-				width: 300,
-				margin: 2,
-				errorCorrectionLevel: 'M'
-			})
-				.then((url) => {
-					qrImageUrl = url;
-				})
-				.catch((error) => {
-					console.error('QR generation error:', error);
-				});
-		}
-	});
 </script>
 
 <div class="min-h-screen bg-base-200">
@@ -159,8 +178,32 @@
 
 	<div class="container mx-auto px-4 py-8">
 		{#if loading}
-			<div class="flex justify-center py-20">
+			<div class="flex flex-col items-center justify-center py-20">
 				<span class="loading loading-lg loading-spinner"></span>
+				<div class="mt-4 text-sm text-base-content/70">{debugInfo}</div>
+			</div>
+		{:else if error}
+			<div class="mx-auto max-w-lg">
+				<div class="alert alert-error">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-6 w-6 shrink-0 stroke-current"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<div>
+						<div class="font-bold">Error</div>
+						<div class="text-sm">{error}</div>
+						<div class="mt-2 text-xs opacity-70">{debugInfo}</div>
+					</div>
+				</div>
 			</div>
 		{:else if paymentData}
 			<div class="mx-auto max-w-lg">
@@ -205,22 +248,36 @@
 										{#if qrImageUrl}
 											<img src={qrImageUrl} alt="QR Code QRIS" class="h-72 w-72" />
 										{:else}
-											<!-- ✅ Fallback jika QR gagal generate -->
-											<div class="flex h-72 w-72 flex-col items-center justify-center gap-4">
+											<div class="flex h-72 w-72 flex-col items-center justify-center">
 												<span class="loading loading-lg loading-spinner"></span>
-												<div class="text-center">
-													<div class="text-sm text-base-content/70">Atau gunakan nomor:</div>
-													<input
-														type="text"
-														value={paymentData.payment_number}
-														readonly
-														class="input-bordered input input-sm mt-2 w-full font-mono text-xs"
-													/>
+												<div class="mt-4 text-sm text-base-content/70">Generating QR code...</div>
+												<div class="mt-2 text-xs text-base-content/50">
+													{debugInfo}
 												</div>
 											</div>
 										{/if}
 									</div>
 								</div>
+
+								{#if paymentData.payment_number && !qrImageUrl}
+									<div class="mt-4">
+										<div class="mb-2 text-sm font-semibold">Atau gunakan nomor:</div>
+										<div class="flex items-center gap-2">
+											<input
+												type="text"
+												value={paymentData.payment_number}
+												readonly
+												class="input-bordered input input-sm w-full font-mono"
+											/>
+											<button
+												class="btn btn-square btn-sm btn-primary"
+												onclick={() => copyToClipboard(paymentData.payment_number)}
+											>
+												📋
+											</button>
+										</div>
+									</div>
+								{/if}
 							</div>
 
 							<div class="alert alert-info">
@@ -302,6 +359,15 @@
 							<span class="font-medium">Menunggu pembayaran...</span>
 						</div>
 					</div>
+				</div>
+			</div>
+		{:else}
+			<div class="mx-auto max-w-lg">
+				<div class="alert alert-warning">
+					<span>Data pembayaran tidak ditemukan</span>
+				</div>
+				<div class="mt-4 text-center">
+					<a href="/my-orders" class="btn btn-primary">Kembali ke Pesanan</a>
 				</div>
 			</div>
 		{/if}

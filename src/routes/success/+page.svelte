@@ -48,7 +48,7 @@
 						Rp{transaction.amount.toLocaleString('id-ID')}
 					</div>
 					<div class="mt-6 card-actions">
-						<a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+						<a href="/my-orders" class="btn btn-primary">Pesanan saya</a>
 					</div>
 				</div>
 			</div>
@@ -61,7 +61,7 @@
 						Silakan coba lagi atau hubungi kami jika ada masalah.
 					</p>
 					<div class="mt-6 card-actions">
-						<a href="/" class="btn btn-primary">Coba Lagi</a>
+						<a href="/my-orders" class="btn btn-primary">Coba Lagi</a>
 					</div>
 				</div>
 			</div>

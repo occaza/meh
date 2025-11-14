@@ -1,4 +1,3 @@
-// src/routes/api/checkout/+server.ts
 import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
 import { pakasir, type PaymentMethod } from '$lib/server/pakasir';
@@ -43,37 +42,64 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Invalid product price' }, { status: 500 });
 		}
 
+		// Check existing transaction
 		const { data: existing, error: fetchError } = await supabaseAdmin
 			.from('transactions')
 			.select('order_id')
 			.eq('order_id', order_id)
 			.single();
 
+		// Create payment via Pakasir
+		console.log('Creating payment via Pakasir:', { order_id, amount, payment_method });
+		const payment = await pakasir.createTransaction(
+			order_id,
+			amount,
+			payment_method as PaymentMethod
+		);
+
+		console.log('Payment created:', payment);
+
 		if (fetchError && fetchError.code !== 'PGRST116') {
 			console.error('Supabase fetch error:', fetchError);
 			return json({ error: 'Failed to check existing transaction' }, { status: 500 });
 		}
 
+		// Insert new transaction with payment info
 		if (fetchError?.code === 'PGRST116') {
 			const { error: insertError } = await supabaseAdmin.from('transactions').insert({
 				order_id,
 				product_id,
 				amount,
 				status: 'pending',
-				user_id // Tambah ini
+				user_id,
+				payment_method: payment.payment_method,
+				payment_number: payment.payment_number,
+				fee: payment.fee,
+				total_payment: payment.total_payment,
+				expired_at: payment.expired_at
 			});
 
 			if (insertError) {
 				console.error('Failed to insert transaction:', insertError);
 				return json({ error: 'Failed to create transaction' }, { status: 500 });
 			}
-		}
+		} else {
+			// Update existing transaction with payment info
+			const { error: updateError } = await supabaseAdmin
+				.from('transactions')
+				.update({
+					payment_method: payment.payment_method,
+					payment_number: payment.payment_number,
+					fee: payment.fee,
+					total_payment: payment.total_payment,
+					expired_at: payment.expired_at
+				})
+				.eq('order_id', order_id);
 
-		const payment = await pakasir.createTransaction(
-			order_id,
-			amount,
-			payment_method as PaymentMethod
-		);
+			if (updateError) {
+				console.error('Failed to update transaction:', updateError);
+			}
+		}
 
 		return json({
 			order_id: payment.order_id,

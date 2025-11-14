@@ -72,14 +72,19 @@ export const pakasir = {
 
 		const url = `${PAKASIR_BASE}/api/transactiondetail?${params.toString()}`;
 
+		console.log('Fetching transaction detail:', { orderId, amount, url });
+
 		const res = await fetch(url);
 
 		if (!res.ok) {
 			const text = await res.text();
+			console.error('Pakasir API error:', res.status, text);
 			throw new Error(`Failed to get transaction detail: ${res.status} ${text}`);
 		}
 
 		const data = await res.json();
+		console.log('Pakasir transaction detail response:', JSON.stringify(data, null, 2));
+
 		return data.transaction;
 	},
 
