@@ -33,11 +33,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Email sudah terdaftar' }, { status: 400 });
 		}
 
-		// Create user
+		// Create user dengan email_confirm: false dan generate_link: true
 		const { data: userData, error: authError } = await supabaseAdmin.auth.admin.createUser({
 			email,
 			password,
-			email_confirm: false,
+			email_confirm: false, // Ubah jadi false supaya kirim email
 			user_metadata: {
 				full_name,
 				phone_number
@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		console.log('User created:', userData.user.id);
 
-		// Cek apakah sudah ada di user_roles
+		// Insert user role
 		const { data: existingRole } = await supabaseAdmin
 			.from('user_roles')
 			.select('user_id')
@@ -65,7 +65,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (existingRole) {
 			console.log('User role already exists, updating...');
 
-			// Update existing
 			const { error: updateError } = await supabaseAdmin
 				.from('user_roles')
 				.update({
@@ -82,7 +81,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		} else {
 			console.log('Inserting new user role...');
 
-			// Insert new
 			const { error: insertError } = await supabaseAdmin.from('user_roles').insert({
 				user_id: userData.user.id,
 				role: 'user',
@@ -99,9 +97,26 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		console.log('User role saved successfully');
 
+		// Generate email verification link
+		const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+			type: 'signup',
+			email: email,
+			password: password,
+			options: {
+				redirectTo: `${new URL(request.url).origin}/login`
+			}
+		});
+
+		if (linkError) {
+			console.error('Generate link error:', linkError);
+			// Tidak return error, user tetap berhasil dibuat
+		} else {
+			console.log('Verification link generated:', linkData.properties.action_link);
+		}
+
 		return json({
 			success: true,
-			message: 'Registrasi berhasil. Silakan login.'
+			message: 'Registrasi berhasil. Cek email Anda untuk verifikasi akun.'
 		});
 	} catch (error) {
 		console.error('Register error:', error);

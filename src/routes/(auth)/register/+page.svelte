@@ -10,6 +10,7 @@
 	let loading = $state(false);
 	let error = $state('');
 	let success = $state(false);
+	let successMessage = $state('');
 
 	async function handleRegister() {
 		loading = true;
@@ -46,7 +47,6 @@
 		}
 
 		try {
-			// Panggil API server untuk register
 			const res = await fetch('/api/auth/register', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -66,9 +66,12 @@
 			}
 
 			success = true;
+			successMessage = data.message;
+
+			// Redirect setelah 5 detik
 			setTimeout(() => {
 				goto('/login');
-			}, 2000);
+			}, 5000);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Registrasi gagal';
 		} finally {
@@ -97,7 +100,18 @@
 							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
 						/>
 					</svg>
-					<span>Registrasi berhasil! Redirect ke login...</span>
+					<div>
+						<div class="font-bold">Registrasi Berhasil!</div>
+						<div class="text-sm">{successMessage}</div>
+						<div class="mt-2 text-xs text-success-content/70">
+							Redirect ke login dalam 5 detik...
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-4 text-center">
+					<p class="text-sm text-base-content/70">Tidak menerima email?</p>
+					<p class="text-xs text-base-content/50">Cek folder spam/junk Anda</p>
 				</div>
 			{:else}
 				{#if error}
