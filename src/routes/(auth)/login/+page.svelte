@@ -103,6 +103,7 @@
 						type="email"
 						placeholder="admin@example.com"
 						class="input-bordered input"
+						autocomplete="username"
 						bind:value={email}
 						required
 					/>
@@ -117,6 +118,7 @@
 						type="password"
 						placeholder="••••••••"
 						class="input-bordered input"
+						autocomplete="current-password"
 						bind:value={password}
 						required
 					/>

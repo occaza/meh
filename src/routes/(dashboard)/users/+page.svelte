@@ -1,4 +1,3 @@
-<!-- src/routes/(dashboard)/users/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 
@@ -6,6 +5,8 @@
 		id: string;
 		email: string;
 		role: string;
+		full_name?: string;
+		phone_number?: string;
 		created_at: string;
 	};
 
@@ -105,6 +106,8 @@
 				<thead>
 					<tr>
 						<th>Email</th>
+						<th>Nama</th>
+						<th>No HP</th>
 						<th>Role</th>
 						<th>Terdaftar</th>
 						<th>Aksi</th>
@@ -114,6 +117,8 @@
 					{#each users as user}
 						<tr class="hover">
 							<td>{user.email}</td>
+							<td>{user.full_name || '-'}</td>
+							<td>{user.phone_number || '-'}</td>
 							<td>
 								<span class="badge {getRoleBadgeClass(user.role)}">
 									{user.role}
@@ -172,8 +177,7 @@
 				></path>
 			</svg>
 			<div class="text-sm">
-				<strong>Info:</strong> Hanya superadmin yang bisa mengubah role user. Admin dan user hanya bisa
-				akses fitur sesuai permission mereka.
+				<strong>Info:</strong> Hanya superadmin yang bisa mengubah role user.
 			</div>
 		</div>
 	{:else}

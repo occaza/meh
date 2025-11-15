@@ -9,11 +9,11 @@
 	const isSuperAdmin = $derived(user.role === 'superadmin');
 
 	const menuItems = [
-		{ href: '/dashboard', icon: '📊', label: 'Dashboard', roles: ['superadmin', 'admin'] },
-		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin', 'admin'] },
-		{ href: '/coupons', icon: '🎟️', label: 'Kupon', roles: ['superadmin', 'admin'] }, // ✨ Tambah ini
-		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin', 'admin'] },
-		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] } // Only superadmin
+		{ href: '/dashboard', icon: '📊', label: 'Dashboard', roles: ['superadmin'] },
+		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin'] },
+		{ href: '/coupons', icon: '🎟️', label: 'Kupon', roles: ['superadmin'] },
+		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin'] },
+		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] }
 	];
 
 	const visibleMenuItems = $derived(menuItems.filter((item) => item.roles.includes(user.role)));
@@ -22,8 +22,6 @@
 		switch (role) {
 			case 'superadmin':
 				return 'badge-error';
-			case 'admin':
-				return 'badge-warning';
 			default:
 				return 'badge-ghost';
 		}
@@ -33,8 +31,6 @@
 		switch (role) {
 			case 'superadmin':
 				return 'Super Admin';
-			case 'admin':
-				return 'Admin';
 			default:
 				return 'User';
 		}

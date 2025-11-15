@@ -5,6 +5,8 @@
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let fullName = $state('');
+	let phoneNumber = $state('');
 	let loading = $state(false);
 	let error = $state('');
 	let success = $state(false);
@@ -12,6 +14,24 @@
 	async function handleRegister() {
 		loading = true;
 		error = '';
+
+		if (!fullName.trim()) {
+			error = 'Nama lengkap harus diisi';
+			loading = false;
+			return;
+		}
+
+		if (!phoneNumber.trim()) {
+			error = 'Nomor HP harus diisi';
+			loading = false;
+			return;
+		}
+
+		if (!/^[0-9+\-\s()]+$/.test(phoneNumber)) {
+			error = 'Nomor HP tidak valid';
+			loading = false;
+			return;
+		}
 
 		if (password !== confirmPassword) {
 			error = 'Password tidak cocok';
@@ -26,24 +46,29 @@
 		}
 
 		try {
-			const supabase = getSupabaseClient();
-
-			const { data, error: authError } = await supabase.auth.signUp({
-				email,
-				password
+			// Panggil API server untuk register
+			const res = await fetch('/api/auth/register', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					email,
+					password,
+					full_name: fullName.trim(),
+					phone_number: phoneNumber.trim()
+				})
 			});
 
-			if (authError) {
-				error = authError.message;
+			const data = await res.json();
+
+			if (!res.ok) {
+				error = data.error || 'Registrasi gagal';
 				return;
 			}
 
-			if (data.user) {
-				success = true;
-				setTimeout(() => {
-					goto('/login');
-				}, 2000);
-			}
+			success = true;
+			setTimeout(() => {
+				goto('/login');
+			}, 2000);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Registrasi gagal';
 		} finally {
@@ -53,9 +78,9 @@
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-base-200">
-	<div class="card w-96 bg-base-100 shadow-xl">
+	<div class="card w-full max-w-md bg-base-100 shadow-xl">
 		<div class="card-body">
-			<h2 class="card-title text-center text-2xl font-bold">Register Admin</h2>
+			<h2 class="card-title text-center text-2xl font-bold">Register</h2>
 
 			{#if success}
 				<div class="alert alert-success">
@@ -72,7 +97,7 @@
 							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
 						/>
 					</svg>
-					<span>Registrasi berhasil! Cek email untuk verifikasi. Redirect ke login...</span>
+					<span>Registrasi berhasil! Redirect ke login...</span>
 				</div>
 			{:else}
 				{#if error}
@@ -101,14 +126,45 @@
 					}}
 				>
 					<div class="form-control">
+						<label class="label" for="fullName">
+							<span class="label-text">Nama Lengkap</span>
+						</label>
+						<input
+							id="fullName"
+							type="text"
+							placeholder="John Doe"
+							class="input-bordered input"
+							bind:value={fullName}
+							autocomplete="name"
+							required
+						/>
+					</div>
+
+					<div class="form-control mt-4">
+						<label class="label" for="phoneNumber">
+							<span class="label-text">Nomor HP</span>
+						</label>
+						<input
+							id="phoneNumber"
+							type="tel"
+							placeholder="08123456789"
+							class="input-bordered input"
+							autocomplete="tel"
+							bind:value={phoneNumber}
+							required
+						/>
+					</div>
+
+					<div class="form-control mt-4">
 						<label class="label" for="email">
 							<span class="label-text">Email</span>
 						</label>
 						<input
 							id="email"
 							type="email"
-							placeholder="admin@example.com"
+							placeholder="john@example.com"
 							class="input-bordered input"
+							autocomplete="email"
 							bind:value={email}
 							required
 						/>
@@ -123,6 +179,7 @@
 							type="password"
 							placeholder="••••••••"
 							class="input-bordered input"
+							autocomplete="new-password"
 							bind:value={password}
 							required
 						/>
@@ -140,6 +197,7 @@
 							type="password"
 							placeholder="••••••••"
 							class="input-bordered input"
+							autocomplete="new-password"
 							bind:value={confirmPassword}
 							required
 						/>
