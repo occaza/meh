@@ -1,11 +1,8 @@
-// src/routes/api/auth/register/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
-		const { getSupabaseAdmin } = await import('$lib/server/supabase');
-
 		const body = await request.json();
 		const { email, password, full_name, phone_number } = body;
 
@@ -23,100 +20,62 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Nama lengkap dan nomor HP harus diisi' }, { status: 400 });
 		}
 
-		const supabaseAdmin = getSupabaseAdmin();
+		// Import client supabase untuk signup
+		const { createClient } = await import('@supabase/supabase-js');
+		const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = await import('$env/static/private');
 
-		// Cek apakah email sudah terdaftar
-		const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-		const emailExists = existingUsers?.users.some((u) => u.email === email);
-
-		if (emailExists) {
-			return json({ error: 'Email sudah terdaftar' }, { status: 400 });
+		if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
+			return json({ error: 'Supabase config missing' }, { status: 500 });
 		}
 
-		// Create user dengan email_confirm: false dan generate_link: true
-		const { data: userData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+		const supabase = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
+
+		// Signup dengan Supabase client (otomatis kirim email)
+		const { data: signupData, error: signupError } = await supabase.auth.signUp({
 			email,
 			password,
-			email_confirm: false, // Ubah jadi false supaya kirim email
-			user_metadata: {
-				full_name,
-				phone_number
+			options: {
+				data: {
+					full_name,
+					phone_number
+				},
+				emailRedirectTo: `${new URL(request.url).origin}/login`
 			}
 		});
 
-		if (authError) {
-			console.error('Create user error:', authError);
-			return json({ error: authError.message || 'Gagal membuat akun' }, { status: 400 });
+		if (signupError) {
+			console.error('Signup error:', signupError);
+			return json({ error: signupError.message || 'Gagal membuat akun' }, { status: 400 });
 		}
 
-		if (!userData || !userData.user) {
+		if (!signupData || !signupData.user) {
 			return json({ error: 'Gagal membuat akun' }, { status: 500 });
 		}
 
-		console.log('User created:', userData.user.id);
+		console.log('User created:', signupData.user.id);
 
-		// Insert user role
-		const { data: existingRole } = await supabaseAdmin
-			.from('user_roles')
-			.select('user_id')
-			.eq('user_id', userData.user.id)
-			.single();
+		// Insert user role menggunakan admin client
+		const { getSupabaseAdmin } = await import('$lib/server/supabase');
+		const supabaseAdmin = getSupabaseAdmin();
 
-		if (existingRole) {
-			console.log('User role already exists, updating...');
-
-			const { error: updateError } = await supabaseAdmin
-				.from('user_roles')
-				.update({
-					full_name,
-					phone_number,
-					updated_at: new Date().toISOString()
-				})
-				.eq('user_id', userData.user.id);
-
-			if (updateError) {
-				console.error('Update role error:', updateError);
-				return json({ error: 'Gagal update data user' }, { status: 500 });
-			}
-		} else {
-			console.log('Inserting new user role...');
-
-			const { error: insertError } = await supabaseAdmin.from('user_roles').insert({
-				user_id: userData.user.id,
-				role: 'user',
-				full_name,
-				phone_number
-			});
-
-			if (insertError) {
-				console.error('Insert role error:', insertError);
-				await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
-				return json({ error: 'Gagal menyimpan data user' }, { status: 500 });
-			}
-		}
-
-		console.log('User role saved successfully');
-
-		// Generate email verification link
-		const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-			type: 'signup',
-			email: email,
-			password: password,
-			options: {
-				redirectTo: `${new URL(request.url).origin}/login`
-			}
+		const { error: roleError } = await supabaseAdmin.from('user_roles').insert({
+			user_id: signupData.user.id,
+			role: 'user',
+			full_name,
+			phone_number
 		});
 
-		if (linkError) {
-			console.error('Generate link error:', linkError);
+		if (roleError) {
+			console.error('Insert role error:', roleError);
 			// Tidak return error, user tetap berhasil dibuat
 		} else {
-			console.log('Verification link generated:', linkData.properties.action_link);
+			console.log('User role saved successfully');
 		}
 
 		return json({
 			success: true,
-			message: 'Registrasi berhasil. Cek email Anda untuk verifikasi akun.'
+			message: 'Registrasi berhasil. Cek email Anda untuk verifikasi akun.',
+			email_sent: !signupData.user.confirmed_at // Email terkirim jika belum confirmed
 		});
 	} catch (error) {
 		console.error('Register error:', error);
