@@ -33,8 +33,6 @@ export const pakasir = {
 		const { SLUG, API_KEY } = getEnv();
 		const endpoint = `${PAKASIR_BASE}/api/transactioncreate/${paymentMethod}`;
 
-		// console.log('Creating transaction:', { endpoint, orderId, amount, paymentMethod });
-
 		const res = await fetch(endpoint, {
 			method: 'POST',
 			headers: {
@@ -55,8 +53,6 @@ export const pakasir = {
 		}
 
 		const data = await res.json();
-		// console.log('Pakasir response:', data);
-
 		return data.payment;
 	},
 
@@ -92,28 +88,35 @@ export const pakasir = {
 		const { SLUG, API_KEY, IS_PROD } = getEnv();
 
 		if (IS_PROD) {
-			console.log('Skipping payment simulation in production mode');
+			console.log('⚠️ Skipping payment simulation in production mode');
 			return;
 		}
 
-		// console.log('Simulating payment for:', orderId);
+		console.log('💳 Simulating payment via Pakasir:', { orderId, amount });
 
-		const res = await fetch(`${PAKASIR_BASE}/api/paymentsimulation`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				project: SLUG,
-				order_id: orderId,
-				amount,
-				api_key: API_KEY
-			})
-		});
+		try {
+			const res = await fetch(`${PAKASIR_BASE}/api/paymentsimulation`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					project: SLUG,
+					order_id: orderId,
+					amount,
+					api_key: API_KEY
+				})
+			});
 
-		if (!res.ok) {
-			const text = await res.text();
-			throw new Error(`Pakasir simulation failed: ${res.status} ${text}`);
+			if (!res.ok) {
+				const text = await res.text();
+				console.error('Pakasir simulation error:', res.status, text);
+				throw new Error(`Pakasir simulation failed: ${res.status} ${text}`);
+			}
+
+			const data = await res.json();
+			console.log('✅ Pakasir simulation response:', data);
+		} catch (error) {
+			console.error('❌ Pakasir simulation exception:', error);
+			throw error;
 		}
-
-		// console.log('Payment simulation successful');
 	}
 };
