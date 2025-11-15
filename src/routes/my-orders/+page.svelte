@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Navbar, formatCurrency, formatDate } from '$lib';
-	import { authUser } from '$lib/stores/auth.store';
+	// import { authUser } from '$lib/stores/auth.store';
 	import { getStatusBadge, getStatusText } from '$lib/utils/status.utils';
+
+	let { data } = $props();
 
 	type OrderItem = {
 		product: {
@@ -29,7 +31,8 @@
 	let loading = $state(true);
 	let filter = $state('all');
 
-	const user = $derived($authUser);
+	// Ganti ini
+	const user = $derived(data.user);
 
 	onMount(async () => {
 		if (!user) {

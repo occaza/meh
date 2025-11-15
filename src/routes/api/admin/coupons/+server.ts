@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 // GET - List all coupons
 export const GET: RequestHandler = async ({ cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const supabaseAdmin = getSupabaseAdmin();
 
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 // POST - Create new coupon
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const body = await request.json();
 		const {

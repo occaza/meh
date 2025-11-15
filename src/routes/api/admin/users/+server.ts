@@ -1,10 +1,12 @@
-// src/routes/api/admin/users/+server.ts
 import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
+import { requireRole } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ cookies }) => {
 	try {
+		await requireRole(cookies, ['superadmin']);
+
 		const supabaseAdmin = getSupabaseAdmin();
 
 		const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
@@ -29,6 +31,7 @@ export const GET: RequestHandler = async () => {
 			]) || []
 		);
 
+		// Filter: jangan tampilkan superadmin
 		const users = authUsers.users
 			.map((user) => {
 				const roleData = roleMap.get(user.id);
@@ -52,10 +55,12 @@ export const GET: RequestHandler = async () => {
 	}
 };
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
+		await requireRole(cookies, ['superadmin']);
+
 		const body = await request.json();
-		const { email, password, role = 'user', full_name, phone_number } = body;
+		const { email, password, full_name, phone_number } = body;
 
 		if (!email || !password) {
 			return json({ error: 'Email dan password harus diisi' }, { status: 400 });
@@ -63,10 +68,6 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (password.length < 6) {
 			return json({ error: 'Password minimal 6 karakter' }, { status: 400 });
-		}
-
-		if (!['admin', 'user'].includes(role)) {
-			return json({ error: 'Role tidak valid' }, { status: 400 });
 		}
 
 		const supabaseAdmin = getSupabaseAdmin();
@@ -86,9 +87,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: error.message || 'Gagal membuat user' }, { status: 400 });
 		}
 
+		// Role default: user
 		const { error: roleError } = await supabaseAdmin.from('user_roles').insert({
 			user_id: data.user.id,
-			role,
+			role: 'user',
 			full_name: full_name || null,
 			phone_number: phone_number || null
 		});
@@ -102,7 +104,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({
 			id: data.user.id,
 			email: data.user.email,
-			role,
+			role: 'user',
 			full_name: full_name || null,
 			phone_number: phone_number || null,
 			created_at: data.user.created_at

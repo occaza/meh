@@ -123,7 +123,11 @@
 						required
 					/>
 				</div>
-
+				<div class="label">
+					<a href="/forgot-password" class="label-text-alt link link-primary link-hover">
+						Lupa password?
+					</a>
+				</div>
 				<div class="form-control mt-6">
 					<button type="submit" class="btn btn-primary" disabled={loading}>
 						{#if loading}

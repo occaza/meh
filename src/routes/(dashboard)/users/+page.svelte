@@ -12,7 +12,6 @@
 
 	let users = $state<UserWithRole[]>([]);
 	let loading = $state(true);
-	let updating = $state<string | null>(null);
 
 	onMount(async () => {
 		await loadUsers();
@@ -36,43 +35,6 @@
 		}
 	}
 
-	async function updateRole(userId: string, newRole: string) {
-		if (!confirm(`Ubah role user ini menjadi ${newRole}?`)) return;
-
-		updating = userId;
-		try {
-			const res = await fetch(`/api/admin/users/${userId}/role`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ role: newRole })
-			});
-
-			if (res.ok) {
-				await loadUsers();
-				alert('Role berhasil diubah');
-			} else {
-				const data = await res.json();
-				alert(data.error || 'Gagal mengubah role');
-			}
-		} catch (error) {
-			console.error('Update role error:', error);
-			alert('Terjadi kesalahan');
-		} finally {
-			updating = null;
-		}
-	}
-
-	function getRoleBadgeClass(role: string) {
-		switch (role) {
-			case 'superadmin':
-				return 'badge-error';
-			case 'admin':
-				return 'badge-warning';
-			default:
-				return 'badge-ghost';
-		}
-	}
-
 	function formatDate(dateString: string) {
 		return new Date(dateString).toLocaleString('id-ID', {
 			day: '2-digit',
@@ -88,7 +50,7 @@
 	<div class="mb-8 flex items-center justify-between">
 		<div>
 			<h1 class="text-3xl font-bold">Kelola User</h1>
-			<p class="text-base-content/70">Manage user roles and permissions</p>
+			<p class="text-base-content/70">Daftar user yang terdaftar</p>
 		</div>
 		<button class="btn btn-ghost" onclick={loadUsers}>
 			<span>🔄</span>
@@ -110,7 +72,6 @@
 						<th>No HP</th>
 						<th>Role</th>
 						<th>Terdaftar</th>
-						<th>Aksi</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -120,42 +81,9 @@
 							<td>{user.full_name || '-'}</td>
 							<td>{user.phone_number || '-'}</td>
 							<td>
-								<span class="badge {getRoleBadgeClass(user.role)}">
-									{user.role}
-								</span>
+								<span class="badge badge-ghost">User</span>
 							</td>
 							<td class="text-sm">{formatDate(user.created_at)}</td>
-							<td>
-								<div class="flex gap-2">
-									{#if user.role !== 'superadmin'}
-										<button
-											class="btn btn-xs btn-warning"
-											onclick={() => updateRole(user.id, 'admin')}
-											disabled={updating === user.id || user.role === 'admin'}
-										>
-											{#if updating === user.id}
-												<span class="loading loading-xs loading-spinner"></span>
-											{:else}
-												Make Admin
-											{/if}
-										</button>
-									{/if}
-
-									{#if user.role !== 'user'}
-										<button
-											class="btn btn-ghost btn-xs"
-											onclick={() => updateRole(user.id, 'user')}
-											disabled={updating === user.id || user.role === 'user'}
-										>
-											{#if updating === user.id}
-												<span class="loading loading-xs loading-spinner"></span>
-											{:else}
-												Make User
-											{/if}
-										</button>
-									{/if}
-								</div>
-							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -177,7 +105,8 @@
 				></path>
 			</svg>
 			<div class="text-sm">
-				<strong>Info:</strong> Hanya superadmin yang bisa mengubah role user.
+				<strong>Info:</strong> Semua user otomatis memiliki role "user". Superadmin hanya bisa ditambah
+				manual di database.
 			</div>
 		</div>
 	{:else}

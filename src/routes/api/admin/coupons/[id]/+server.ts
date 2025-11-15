@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 // GET - Get single coupon
 export const GET: RequestHandler = async ({ params, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const supabaseAdmin = getSupabaseAdmin();
@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ params, cookies }) => {
 // PUT - Update coupon
 export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const body = await request.json();
@@ -80,7 +80,7 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 // DELETE - Delete coupon
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const supabaseAdmin = getSupabaseAdmin();

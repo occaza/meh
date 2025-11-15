@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
 import { requireRole } from '$lib/server/auth';
-import type { RequestHandler } from './$types';
+import type { RequestHandler } from '../$types';
 
 export const POST: RequestHandler = async ({ params, cookies }) => {
 	try {
-		const user = await requireRole(cookies, ['admin', 'superadmin']);
+		const user = await requireRole(cookies, ['superadmin']);
 		const { order_id } = params;
 
 		const supabaseAdmin = getSupabaseAdmin();

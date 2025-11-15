@@ -1,6 +1,6 @@
 // src/routes/(dashboard)/+layout.server.ts
 import { redirect } from '@sveltejs/kit';
-import { getUser, isAdmin } from '$lib/server/auth';
+import { getUser, isSuperAdmin } from '$lib/server/auth';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
@@ -10,9 +10,9 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 		throw redirect(302, '/login');
 	}
 
-	// Cek apakah user punya akses admin
-	if (!isAdmin(user)) {
-		throw redirect(302, '/'); // Redirect ke homepage jika bukan admin
+	// Hanya superadmin yang bisa akses dashboard
+	if (!isSuperAdmin(user)) {
+		throw redirect(302, '/');
 	}
 
 	return {

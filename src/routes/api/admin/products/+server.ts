@@ -5,11 +5,10 @@ import { requireRole } from '$lib/server/auth';
 import { generateUniqueSlug } from '$lib/utils/slug.utils';
 import type { RequestHandler } from './$types';
 
-// Handler untuk menambah produk baru
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
-		// Require admin or superadmin role
-		await requireRole(cookies, ['admin', 'superadmin']);
+		// Hanya superadmin
+		await requireRole(cookies, ['superadmin']);
 
 		const body = await request.json();
 		const {
@@ -25,7 +24,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		console.log('Received POST request:', { name, description, price });
 
-		// Validasi input
 		if (!name || !description || price === undefined) {
 			return json({ error: 'Semua field harus diisi' }, { status: 400 });
 		}
@@ -45,17 +43,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Generate ID unik
 		const id = `PROD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-		// console.log('Inserting product with ID:', id);
 		const slug = generateUniqueSlug(name, id);
 
 		const { data, error } = await supabaseAdmin
 			.from('products')
 			.insert({
 				id,
-				slug, // Tambah ini
+				slug,
 				name: name.trim(),
 				description: description.trim(),
 				detail_description: detail_description?.trim() || description.trim(),
@@ -86,7 +81,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	}
 };
 
-// Handler untuk mendapatkan semua produk (optional, sudah ada di /api/products)
 export const GET: RequestHandler = async () => {
 	try {
 		const supabaseAdmin = getSupabaseAdmin();

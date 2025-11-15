@@ -11,23 +11,15 @@
 	const isSuperAdmin = $derived(user.role === 'superadmin');
 
 	const menuItems = [
-		{ href: '/dashboard', icon: '📊', label: 'Dashboard', roles: ['superadmin'] },
-		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin'] },
-		{ href: '/coupons', icon: '🎟️', label: 'Kupon', roles: ['superadmin'] },
-		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin'] },
-		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] },
-		{
-			href: '/orders-processing',
-			icon: '⚠️',
-			label: 'Pesanan Baru',
-			roles: ['superadmin'],
-			badge: true
-		} // Tambah ini
+		{ href: '/dashboard', icon: '📊', label: 'Dashboard' },
+		{ href: '/products', icon: '📦', label: 'Produk' },
+		{ href: '/coupons', icon: '🎟️', label: 'Kupon' },
+		{ href: '/transaction', icon: '💳', label: 'Transaksi' },
+		{ href: '/users', icon: '👥', label: 'Kelola User' },
+		{ href: '/orders-processing', icon: '⚠️', label: 'Pesanan Baru', badge: true }
 	];
 
-	const visibleMenuItems = $derived(menuItems.filter((item) => item.roles.includes(user.role)));
 	onMount(() => {
-		// Poll untuk hitung pesanan processing
 		const checkOrders = async () => {
 			try {
 				const res = await fetch('/api/admin/orders-processing');
@@ -46,31 +38,10 @@
 		return () => clearInterval(interval);
 	});
 
-	function getRoleBadgeClass(role: string) {
-		switch (role) {
-			case 'superadmin':
-				return 'badge-error';
-			default:
-				return 'badge-ghost';
-		}
-	}
-
-	function getRoleLabel(role: string) {
-		switch (role) {
-			case 'superadmin':
-				return 'Super Admin';
-			default:
-				return 'User';
-		}
-	}
-
 	async function handleLogout() {
 		const supabase = getSupabaseClient();
 		await supabase.auth.signOut();
-
-		// Hapus cookies via server endpoint
 		await fetch('/api/auth/session', { method: 'DELETE' });
-
 		goto('/login');
 	}
 </script>
@@ -112,20 +83,17 @@
 			<div class="mb-8 px-4 py-6">
 				<h2 class="text-2xl font-bold">Admin Panel</h2>
 
-				<!-- User Info with Role Badge -->
 				<div class="mt-4 rounded-lg bg-base-300 p-3">
 					<div class="mb-1 text-sm text-base-content/70">Logged in as:</div>
 					<div class="font-semibold">{user.email}</div>
 					<div class="mt-2">
-						<span class="badge {getRoleBadgeClass(user.role)}">
-							{getRoleLabel(user.role)}
-						</span>
+						<span class="badge badge-error">Super Admin</span>
 					</div>
 				</div>
 			</div>
 
 			<ul class="space-y-2">
-				{#each visibleMenuItems as item}
+				{#each menuItems as item}
 					<li>
 						<a
 							href={item.href}

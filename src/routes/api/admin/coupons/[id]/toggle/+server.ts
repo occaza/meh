@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 
 export const PUT: RequestHandler = async ({ params, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const supabaseAdmin = getSupabaseAdmin();

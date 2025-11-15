@@ -8,7 +8,7 @@ import type { RequestHandler } from './$types';
 // GET - Ambil data produk untuk edit (bisa terima ID atau slug)
 export const GET: RequestHandler = async ({ params, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const supabaseAdmin = getSupabaseAdmin();
@@ -44,7 +44,7 @@ export const GET: RequestHandler = async ({ params, cookies }) => {
 // PUT - Update produk
 export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const body = await request.json();
@@ -112,7 +112,7 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 // DELETE - Hapus produk
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
 	try {
-		await requireRole(cookies, ['admin', 'superadmin']);
+		await requireRole(cookies, ['superadmin']);
 
 		const { id } = params;
 		const supabaseAdmin = getSupabaseAdmin();

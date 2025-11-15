@@ -2,7 +2,7 @@
 import { getSupabaseAdmin } from './supabase';
 import type { Cookies } from '@sveltejs/kit';
 
-export type UserRole = 'superadmin' | 'admin' | 'user';
+export type UserRole = 'superadmin' | 'user';
 
 export type UserWithRole = {
 	id: string;
@@ -67,10 +67,6 @@ export async function requireRole(
 // Helper functions
 export function isSuperAdmin(user: UserWithRole | null): boolean {
 	return user?.role === 'superadmin';
-}
-
-export function isAdmin(user: UserWithRole | null): boolean {
-	return user?.role === 'admin' || user?.role === 'superadmin';
 }
 
 export function isUser(user: UserWithRole | null): boolean {
