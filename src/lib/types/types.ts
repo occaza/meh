@@ -2,7 +2,7 @@
 export type Product = {
 	id: string;
 	name: string;
-	slug?: string; // Tambah ini
+	slug?: string;
 	price: number;
 	description: string;
 	detail_description?: string;
@@ -13,13 +13,16 @@ export type Product = {
 	created_at?: string;
 };
 
+// Ubah ini
 export type Transaction = {
 	order_id: string;
 	amount: number;
-	status: 'pending' | 'completed' | 'expired' | 'failed';
+	status: 'pending' | 'processing' | 'completed' | 'expired' | 'failed'; // Tambah 'processing'
 	product_id: string;
 	payment_method?: string;
 	completed_at?: string;
+	processing_started_at?: string; // Tambah ini
+	processed_by?: string; // Tambah ini
 };
 
 export type CartItem = {
@@ -32,7 +35,6 @@ export type CartItem = {
 	product?: Product;
 };
 
-// ✨ Tambahkan ini
 export type Coupon = {
 	id: string;
 	code: string;

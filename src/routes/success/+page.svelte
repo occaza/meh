@@ -38,17 +38,14 @@
 					<p>Memverifikasi pembayaran...</p>
 				</div>
 			</div>
-		{:else if transaction && transaction.status === 'completed'}
+		{:else if transaction && transaction.status === 'processing'}
 			<div class="card bg-base-100 shadow-xl">
 				<div class="card-body items-center text-center">
-					<div class="mb-4 text-6xl">✅</div>
-					<h1 class="card-title text-2xl">Pembayaran Berhasil</h1>
-					<div class="divider"></div>
-					<div class="text-3xl font-bold text-primary">
-						Rp{transaction.amount.toLocaleString('id-ID')}
-					</div>
+					<div class="mb-4 text-6xl">⏳</div>
+					<h1 class="card-title text-2xl">Pembayaran Diterima</h1>
+					<p class="text-base-content/70">Pesanan Anda sedang diproses oleh admin</p>
 					<div class="mt-6 card-actions">
-						<a href="/my-orders" class="btn btn-primary">Pesanan saya</a>
+						<a href="/my-orders" class="btn btn-primary">Lihat Status</a>
 					</div>
 				</div>
 			</div>

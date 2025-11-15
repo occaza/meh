@@ -9,17 +9,19 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	console.log('Webhook received:', { order_id, amount, status, payment_method });
 
+	// Hanya update ke 'processing' bukan langsung 'completed'
 	if (status !== 'completed') {
 		return json({ received: true });
 	}
 
-	// Update SEMUA transactions dengan order_id yang sama
+	// Update ke status 'processing' ketika pembayaran sukses
 	const { data: updated, error: updateErr } = await supabaseAdmin
 		.from('transactions')
 		.update({
-			status: 'completed',
+			status: 'processing', // Ubah ini dari 'completed'
 			payment_method,
-			completed_at: new Date().toISOString()
+			completed_at: null, // Belum selesai
+			processing_started_at: new Date().toISOString() // Tandai mulai diproses
 		})
 		.eq('order_id', order_id)
 		.eq('status', 'pending')
@@ -30,37 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ received: true });
 	}
 
-	console.log(`✅ Updated ${updated?.length || 0} transactions for order ${order_id}`);
-
-	// Kurangi stok untuk setiap produk
-	if (updated && updated.length > 0) {
-		for (const transaction of updated) {
-			const { data: product } = await supabaseAdmin
-				.from('products')
-				.select('stock, price')
-				.eq('id', transaction.product_id)
-				.single();
-
-			if (product) {
-				// Hitung quantity dari amount
-				const quantity = Math.floor(transaction.amount / product.price);
-
-				// Kurangi stok
-				const { error: stockError } = await supabaseAdmin
-					.from('products')
-					.update({
-						stock: Math.max(0, product.stock - quantity)
-					})
-					.eq('id', transaction.product_id);
-
-				if (stockError) {
-					console.error('Failed to reduce stock:', stockError);
-				} else {
-					console.log(`✅ Stock reduced for product ${transaction.product_id}: ${quantity} units`);
-				}
-			}
-		}
-	}
+	console.log(`✅ Order ${order_id} moved to PROCESSING status`);
 
 	return json({ received: true });
 };

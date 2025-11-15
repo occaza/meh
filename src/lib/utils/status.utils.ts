@@ -3,6 +3,7 @@
 export function getStatusBadge(status: string): string {
 	const badges: Record<string, string> = {
 		completed: 'badge-success',
+		processing: 'badge-info', // Tambah ini
 		pending: 'badge-warning',
 		failed: 'badge-error',
 		expired: 'badge-ghost'
@@ -13,6 +14,7 @@ export function getStatusBadge(status: string): string {
 export function getStatusText(status: string): string {
 	const texts: Record<string, string> = {
 		completed: 'Selesai',
+		processing: 'Diproses', // Tambah ini
 		pending: 'Menunggu',
 		failed: 'Gagal',
 		expired: 'Kadaluarsa'

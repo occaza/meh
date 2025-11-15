@@ -23,6 +23,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		const allCompleted = transactions.every((t) => t.status === 'completed');
+		const anyProcessing = transactions.some((t) => t.status === 'processing');
+
 		const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
 		// Jika completed dan ini first time check, kurangi stok
@@ -54,7 +56,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		return json({
-			status: allCompleted ? 'completed' : transactions[0].status,
+			status: allCompleted ? 'completed' : anyProcessing ? 'processing' : transactions[0].status,
 			amount: totalAmount,
 			completed_at: allCompleted ? transactions[0].completed_at : null
 		});

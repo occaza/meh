@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import { getSupabaseClient } from '$lib/client/supabase';
 
 	let { data, children } = $props();
+	let processingCount = $state(0);
 
 	const user = $derived(data.user);
 	const isSuperAdmin = $derived(user.role === 'superadmin');
@@ -13,10 +15,36 @@
 		{ href: '/products', icon: '📦', label: 'Produk', roles: ['superadmin'] },
 		{ href: '/coupons', icon: '🎟️', label: 'Kupon', roles: ['superadmin'] },
 		{ href: '/transaction', icon: '💳', label: 'Transaksi', roles: ['superadmin'] },
-		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] }
+		{ href: '/users', icon: '👥', label: 'Kelola User', roles: ['superadmin'] },
+		{
+			href: '/orders-processing',
+			icon: '⚠️',
+			label: 'Pesanan Baru',
+			roles: ['superadmin'],
+			badge: true
+		} // Tambah ini
 	];
 
 	const visibleMenuItems = $derived(menuItems.filter((item) => item.roles.includes(user.role)));
+	onMount(() => {
+		// Poll untuk hitung pesanan processing
+		const checkOrders = async () => {
+			try {
+				const res = await fetch('/api/admin/orders-processing');
+				if (res.ok) {
+					const data = await res.json();
+					processingCount = data.length;
+				}
+			} catch (error) {
+				console.error('Check orders error:', error);
+			}
+		};
+
+		checkOrders();
+		const interval = setInterval(checkOrders, 10000);
+
+		return () => clearInterval(interval);
+	});
 
 	function getRoleBadgeClass(role: string) {
 		switch (role) {
@@ -106,6 +134,9 @@
 						>
 							<span class="text-xl">{item.icon}</span>
 							<span>{item.label}</span>
+							{#if item.badge && processingCount > 0}
+								<span class="badge badge-sm badge-error">{processingCount}</span>
+							{/if}
 						</a>
 					</li>
 				{/each}
