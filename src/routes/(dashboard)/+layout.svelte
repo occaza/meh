@@ -3,6 +3,16 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { getSupabaseClient } from '$lib/client/supabase';
+	import {
+		LayoutDashboard,
+		Package,
+		Ticket,
+		CreditCard,
+		Users,
+		PackagePlus,
+		House,
+		DoorOpen
+	} from '@lucide/svelte';
 
 	let { data, children } = $props();
 	let processingCount = $state(0);
@@ -11,12 +21,12 @@
 	const isSuperAdmin = $derived(user.role === 'superadmin');
 
 	const menuItems = [
-		{ href: '/dashboard', icon: '📊', label: 'Dashboard' },
-		{ href: '/products', icon: '📦', label: 'Produk' },
-		{ href: '/coupons', icon: '🎟️', label: 'Kupon' },
-		{ href: '/transaction', icon: '💳', label: 'Transaksi' },
-		{ href: '/users', icon: '👥', label: 'Kelola User' },
-		{ href: '/orders-processing', icon: '⚠️', label: 'Pesanan Baru', badge: true }
+		{ href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+		{ href: '/products', icon: Package, label: 'Produk' },
+		{ href: '/coupons', icon: Ticket, label: 'Kupon' },
+		{ href: '/transaction', icon: CreditCard, label: 'Transaksi' },
+		{ href: '/users', icon: Users, label: 'Kelola User' },
+		{ href: '/orders-processing', icon: PackagePlus, label: 'Pesanan Baru', badge: true }
 	];
 
 	onMount(() => {
@@ -73,7 +83,7 @@
 				</label>
 			</div>
 			<div class="flex-1">
-				<span class="text-xl font-bold">Admin Panel</span>
+				<span class="text-xl font-bold">Admin Toko</span>
 			</div>
 		</div>
 
@@ -86,7 +96,7 @@
 		<label for="drawer" class="drawer-overlay"></label>
 		<div class="menu min-h-full w-80 bg-base-200 p-4 text-base-content">
 			<div class="mb-8 px-4 py-6">
-				<h2 class="text-2xl font-bold">Admin Panel</h2>
+				<h2 class="text-2xl font-bold">Admin Toko</h2>
 
 				<div class="mt-4 rounded-lg bg-base-300 p-3">
 					<div class="mb-1 text-sm text-base-content/70">Logged in as:</div>
@@ -105,7 +115,7 @@
 							class="flex items-center gap-3"
 							class:active={$page.url.pathname === item.href}
 						>
-							<span class="text-xl">{item.icon}</span>
+							<span class="text-xl"><item.icon size="20" /> </span>
 							<span>{item.label}</span>
 							{#if item.badge && processingCount > 0}
 								<span class="badge badge-sm badge-error">{processingCount}</span>
@@ -120,13 +130,13 @@
 				<ul>
 					<li>
 						<a href="/" class="flex items-center gap-3">
-							<span class="text-xl">🏠</span>
+							<span class="text-xl"><House /></span>
 							<span>Ke Halaman Utama</span>
 						</a>
 					</li>
 					<li>
 						<button onclick={handleLogout} class="flex items-center gap-3">
-							<span class="text-xl">🚪</span>
+							<span class="text-xl"><DoorOpen /></span>
 							<span>Logout</span>
 						</button>
 					</li>

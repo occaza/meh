@@ -1,7 +1,14 @@
-<!-- src/routes/(dashboard)/dashboard/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { formatCurrency } from '$lib/utils/format.utils';
+	import {
+		DollarSign,
+		Package,
+		CreditCard,
+		CircleCheck,
+		Clock,
+		TriangleAlert
+	} from '@lucide/svelte';
 
 	let stats = $state({
 		totalProducts: 0,
@@ -10,13 +17,30 @@
 		pendingTransactions: 0,
 		totalRevenue: 0
 	});
+
+	type LowStockProduct = {
+		id: string;
+		name: string;
+		stock: number;
+	};
+
+	let lowStockProducts = $state<LowStockProduct[]>([]);
 	let loading = $state(true);
 
 	onMount(async () => {
 		try {
-			const res = await fetch('/api/admin/stats');
-			const data = await res.json();
-			stats = data;
+			const [statsRes, lowStockRes] = await Promise.all([
+				fetch('/api/admin/stats'),
+				fetch('/api/admin/low-stock')
+			]);
+
+			const statsData = await statsRes.json();
+			stats = statsData;
+
+			if (lowStockRes.ok) {
+				const lowStockData = await lowStockRes.json();
+				lowStockProducts = lowStockData;
+			}
 		} catch (error) {
 			console.error('Failed to fetch stats:', error);
 		} finally {
@@ -37,7 +61,7 @@
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-accent">
-						<span class="text-4xl">💰</span>
+						<DollarSign size={32} />
 					</div>
 					<div class="stat-title">Total Pendapatan</div>
 					<div class="stat-value text-accent">
@@ -46,10 +70,11 @@
 					<div class="stat-desc">Dari transaksi yang selesai</div>
 				</div>
 			</div>
+
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-primary">
-						<span class="text-4xl">📦</span>
+						<Package size={32} />
 					</div>
 					<div class="stat-title">Total Produk</div>
 					<div class="stat-value text-primary">{stats.totalProducts}</div>
@@ -59,7 +84,7 @@
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-secondary">
-						<span class="text-4xl">💳</span>
+						<CreditCard size={32} />
 					</div>
 					<div class="stat-title">Total Transaksi</div>
 					<div class="stat-value text-secondary">{stats.totalTransactions}</div>
@@ -69,7 +94,7 @@
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-success">
-						<span class="text-4xl">✅</span>
+						<CircleCheck size={32} />
 					</div>
 					<div class="stat-title">Transaksi Selesai</div>
 					<div class="stat-value text-success">{stats.completedTransactions}</div>
@@ -79,7 +104,7 @@
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-warning">
-						<span class="text-4xl">⏳</span>
+						<Clock size={32} />
 					</div>
 					<div class="stat-title">Transaksi Pending</div>
 					<div class="stat-value text-warning">{stats.pendingTransactions}</div>
@@ -93,11 +118,11 @@
 					<h2 class="card-title">Quick Actions</h2>
 					<div class="space-y-2">
 						<a href="/products/add-new" class="btn btn-block btn-primary">
-							<span class="text-xl">➕</span>
+							<Package size={20} />
 							Tambah Produk Baru
 						</a>
 						<a href="/transaction" class="btn btn-block btn-outline">
-							<span class="text-xl">📋</span>
+							<CreditCard size={20} />
 							Lihat Semua Transaksi
 						</a>
 					</div>
@@ -106,21 +131,31 @@
 
 			<div class="card bg-base-100 shadow-xl">
 				<div class="card-body">
-					<h2 class="card-title">Informasi</h2>
-					<div class="space-y-2 text-sm">
-						<div class="flex items-center gap-2">
-							<span class="badge badge-info">Info</span>
-							<span>Webhook sudah terkonfigurasi</span>
+					<h2 class="card-title flex items-center gap-2">
+						<TriangleAlert size={20} class="text-warning" />
+						Stok Menipis
+					</h2>
+
+					{#if lowStockProducts.length > 0}
+						<div class="space-y-2">
+							{#each lowStockProducts as product}
+								<div class="flex items-center justify-between rounded-lg bg-base-200 p-3">
+									<div>
+										<div class="font-semibold">{product.name}</div>
+										<div class="text-sm text-base-content/70">
+											Tersisa {product.stock} unit
+										</div>
+									</div>
+									<a href="/products/{product.id}" class="btn btn-ghost btn-sm"> Edit </a>
+								</div>
+							{/each}
 						</div>
-						<div class="flex items-center gap-2">
-							<span class="badge badge-success">Active</span>
-							<span>Integrasi Pakasir aktif</span>
+					{:else}
+						<div class="alert alert-success">
+							<CircleCheck size={20} />
+							<span>Semua produk stoknya aman</span>
 						</div>
-						<div class="flex items-center gap-2">
-							<span class="badge badge-warning">Dev</span>
-							<span>Mode Sandbox untuk testing</span>
-						</div>
-					</div>
+					{/if}
 				</div>
 			</div>
 		</div>

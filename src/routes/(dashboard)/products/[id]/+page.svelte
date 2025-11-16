@@ -175,6 +175,7 @@
 			}
 
 			const allImages = [...existingImages, ...uploadedUrls];
+			console.log('FAQ items before submit:', faqItems);
 
 			const res = await fetch(`/api/admin/products/${productId}`, {
 				method: 'PUT',
@@ -187,11 +188,13 @@
 					stock,
 					discount_percentage: discountPercentage,
 					discount_end_date: discountEndDate || null,
-					images: allImages
+					images: allImages,
+					faq: faqItems.length > 0 ? faqItems : null // Pastikan baris ini ada
 				})
 			});
 
 			const data = await res.json();
+			console.log('Response from server:', data);
 
 			if (!res.ok) {
 				error = data.error || 'Gagal mengupdate produk';

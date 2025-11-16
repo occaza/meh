@@ -2,6 +2,7 @@
 	import { cartCount } from '$lib/stores/cart.store';
 	import { authUser } from '$lib/stores/auth.store';
 	import { page } from '$app/stores';
+	import { CircleUserRound, House, ShoppingBasket } from '@lucide/svelte';
 
 	type Props = {
 		showCart?: boolean;
@@ -18,7 +19,7 @@
 	<div class="container mx-auto flex items-center justify-between px-4">
 		<a href="/" class="flex items-center gap-2 text-xl font-semibold text-primary">
 			<span class="text-2xl">🛒</span>
-			<span class="hidden sm:inline">Toko Digital</span>
+			<span class="hidden sm:inline">AdverFI</span>
 		</a>
 
 		<ul class="hidden items-center gap-6 text-sm font-medium lg:flex">
@@ -28,7 +29,7 @@
 					class="flex items-center gap-1 rounded-md px-3 py-2 transition hover:bg-base-200"
 					class:text-primary={isActive('/')}
 				>
-					🏠 Beranda
+					<House /> Beranda
 				</a>
 			</li>
 			<li>
@@ -37,7 +38,7 @@
 					class="flex items-center gap-1 rounded-md px-3 py-2 transition hover:bg-base-200"
 					class:text-primary={isActive('/shop')}
 				>
-					🛍️ Belanja
+					<ShoppingBasket /> Belanja
 				</a>
 			</li>
 		</ul>
@@ -68,8 +69,10 @@
 			{#if user}
 				<div class="dropdown dropdown-end">
 					<button tabindex="0" class="btn avatar btn-circle btn-ghost">
-						<div class="w-10 rounded-full bg-primary text-primary-content">
-							<span class="text-xl">👤</span>
+						<div
+							class="flex w-10 items-center justify-center rounded-full bg-primary text-primary-content"
+						>
+							<span class="text-xl"><CircleUserRound /> </span>
 						</div>
 					</button>
 					<ul

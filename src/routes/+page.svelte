@@ -1,19 +1,20 @@
 <script lang="ts">
 	import Navbar from '$lib/components/shared/Navbar.svelte';
 	import { cartCount } from '$lib/stores/cart.store';
+	import { Zap, LockKeyhole, TabletSmartphone } from '@lucide/svelte';
 	const features = [
 		{
-			icon: '⚡',
+			icon: Zap,
 			title: 'Pembayaran Cepat',
 			description: 'Proses checkout dalam hitungan detik dengan berbagai metode pembayaran'
 		},
 		{
-			icon: '🔒',
+			icon: LockKeyhole,
 			title: 'Aman & Terpercaya',
 			description: 'Keamanan data dan transaksi Anda terjamin dengan enkripsi tingkat tinggi'
 		},
 		{
-			icon: '📱',
+			icon: TabletSmartphone,
 			title: 'Multi Platform',
 			description: 'Akses dari mana saja, kapan saja melalui desktop atau mobile'
 		}
@@ -59,7 +60,7 @@
 				{#each features as feature}
 					<div class="card bg-base-100 shadow-xl transition-transform hover:scale-105">
 						<div class="card-body items-center text-center">
-							<div class="mb-4 text-6xl">{feature.icon}</div>
+							<div class="mb-4 text-6xl"><feature.icon size="55" /></div>
 							<h3 class="card-title text-2xl">{feature.title}</h3>
 							<p class="text-base-content/70">{feature.description}</p>
 						</div>

@@ -48,6 +48,11 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 
 		const { id } = params;
 		const body = await request.json();
+
+		// Tambah console.log ini untuk debug
+		console.log('Received body:', body);
+		console.log('FAQ data:', body.faq);
+
 		const {
 			name,
 			description,
@@ -57,7 +62,7 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 			stock,
 			discount_percentage,
 			discount_end_date,
-			faq // Tambah ini
+			faq
 		} = body;
 
 		if (!name || !description || price === undefined) {
@@ -66,7 +71,6 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Get product ID yang sebenarnya
 		let productId = id;
 		const extractedId = extractIdFromSlug(id);
 		if (extractedId) {
@@ -78,23 +82,27 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 			if (existing) productId = existing.id;
 		}
 
-		// Generate slug baru jika nama berubah
 		const newSlug = generateUniqueSlug(name, productId);
+
+		const updateData = {
+			name: name.trim(),
+			slug: newSlug,
+			description: description.trim(),
+			detail_description: detail_description?.trim() || description.trim(),
+			price: parseInt(price.toString()),
+			images: images || [],
+			stock: stock !== undefined ? parseInt(stock.toString()) : 0,
+			discount_percentage: discount_percentage ? parseInt(discount_percentage.toString()) : null,
+			discount_end_date: discount_end_date || null,
+			faq: faq || null
+		};
+
+		// Tambah console.log ini
+		console.log('Update data:', updateData);
 
 		const { data, error } = await supabaseAdmin
 			.from('products')
-			.update({
-				name: name.trim(),
-				slug: newSlug,
-				description: description.trim(),
-				detail_description: detail_description?.trim() || description.trim(),
-				price: parseInt(price.toString()),
-				images: images || [],
-				stock: stock !== undefined ? parseInt(stock.toString()) : 0,
-				discount_percentage: discount_percentage ? parseInt(discount_percentage.toString()) : null,
-				discount_end_date: discount_end_date || null,
-				faq: faq || null // Tambah baris ini
-			})
+			.update(updateData)
 			.eq('id', productId)
 			.select()
 			.single();
@@ -103,6 +111,9 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 			console.error('Update product error:', error);
 			return json({ error: 'Gagal update produk' }, { status: 500 });
 		}
+
+		// Tambah console.log ini
+		console.log('Updated product:', data);
 
 		return json(data);
 	} catch (error) {
