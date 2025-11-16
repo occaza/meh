@@ -1,79 +1,65 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
 	import { formatCurrency, formatDate } from '$lib/utils/format.utils';
-	import { getStatusBadge } from '$lib/utils/status.utils';
 
-	type ProcessingOrder = {
-		order_id: string;
-		amount: number;
-		payment_method: string;
-		processing_started_at: string;
-		items: {
-			product: {
-				name: string;
-				images?: string[];
-			};
-			amount: number;
-		}[];
-		total: number;
-	};
+	let { data } = $props();
 
-	let orders = $state<ProcessingOrder[]>([]);
-	let loading = $state(true);
+	let orders = $derived(data.orders);
 	let completing = $state<string | null>(null);
 	let notificationSound: HTMLAudioElement;
+	let previousOrderCount = $state(0);
 
 	onMount(() => {
-		let interval: ReturnType<typeof setInterval>;
+		// Setup notification sound
+		notificationSound = new Audio('/notification_3.wav');
 
-		// use an async IIFE so onMount itself is not async and does not return a Promise
-		(async () => {
-			// Load orders
-			await loadOrders();
+		// Set initial count
+		previousOrderCount = orders.length;
 
-			// Setup notification sound
-			notificationSound = new Audio('/notification_3.wav');
+		// Auto refresh setiap 10 detik
+		const interval = setInterval(async () => {
+			const oldCount = orders.length;
+			await invalidate('app:orders-processing');
 
-			// Poll setiap 10 detik untuk order baru
-			interval = setInterval(async () => {
-				const oldCount = orders.length;
-				await loadOrders();
+			// Cek apakah ada order baru setelah refresh
+			// Kita cek di $effect nanti
+		}, 10000);
 
-				// Jika ada order baru, bunyi notifikasi
-				if (orders.length > oldCount) {
-					notificationSound.play().catch((e) => console.log('Sound play failed:', e));
-
-					// Browser notification
-					if (Notification.permission === 'granted') {
-						new Notification('Order Baru!', {
-							body: `Ada ${orders.length - oldCount} pesanan baru yang perlu diproses`,
-							icon: '/favicon.svg'
-						});
-					}
-				}
-			}, 10000);
-
-			// Request notification permission
-			if (Notification.permission === 'default') {
-				Notification.requestPermission();
-			}
-		})().catch((e) => console.error('onMount error:', e));
+		// Request notification permission
+		if (Notification.permission === 'default') {
+			Notification.requestPermission();
+		}
 
 		return () => clearInterval(interval);
 	});
 
-	async function loadOrders() {
-		try {
-			const res = await fetch('/api/admin/orders-processing');
-			if (res.ok) {
-				const data = await res.json();
-				orders = data;
+	// Deteksi order baru dengan effect
+	$effect(() => {
+		if (orders.length > previousOrderCount) {
+			// Ada order baru
+			const newOrdersCount = orders.length - previousOrderCount;
+
+			// Play sound
+			if (notificationSound) {
+				notificationSound.play().catch((e) => console.log('Sound play failed:', e));
 			}
-		} catch (error) {
-			console.error('Failed to load orders:', error);
-		} finally {
-			loading = false;
+
+			// Browser notification
+			if (Notification.permission === 'granted') {
+				new Notification('Order Baru!', {
+					body: `Ada ${newOrdersCount} pesanan baru yang perlu diproses`,
+					icon: '/favicon.svg'
+				});
+			}
 		}
+
+		// Update previous count
+		previousOrderCount = orders.length;
+	});
+
+	async function loadOrders() {
+		await invalidate('app:orders-processing');
 	}
 
 	async function completeOrder(orderId: string) {
@@ -115,11 +101,7 @@
 		</button>
 	</div>
 
-	{#if loading}
-		<div class="flex justify-center">
-			<span class="loading loading-lg loading-spinner"></span>
-		</div>
-	{:else if orders.length === 0}
+	{#if orders.length === 0}
 		<div class="card bg-base-100 shadow-xl">
 			<div class="card-body items-center py-16 text-center">
 				<div class="mb-4 text-6xl">📦</div>

@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { product_id, order_id, payment_method = 'qris', user_id } = body;
+		const { product_id, order_id, payment_method = 'qris', user_id, quantity = 1 } = body;
 
 		if (!product_id || typeof product_id !== 'string') {
 			return json({ error: 'Invalid or missing product_id' }, { status: 400 });
@@ -24,11 +24,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'order_id must be 5-100 alphanumeric characters' }, { status: 400 });
 		}
 
+		// Validasi quantity
+		const qty = parseInt(quantity.toString());
+		if (isNaN(qty) || qty < 1) {
+			return json({ error: 'Invalid quantity' }, { status: 400 });
+		}
+
 		const supabaseAdmin = getSupabaseAdmin();
 
 		const { data: product, error: productError } = await supabaseAdmin
 			.from('products')
-			.select('price')
+			.select('price, stock')
 			.eq('id', product_id)
 			.single();
 
@@ -36,10 +42,16 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Product not found' }, { status: 404 });
 		}
 
-		const amount = product.price;
+		// Cek stock
+		if (product.stock < qty) {
+			return json({ error: 'Insufficient stock' }, { status: 400 });
+		}
+
+		// Hitung amount berdasarkan quantity
+		const amount = product.price * qty;
 
 		if (!Number.isInteger(amount) || amount <= 0 || amount > 100_000_000) {
-			return json({ error: 'Invalid product price' }, { status: 500 });
+			return json({ error: 'Invalid product price or quantity' }, { status: 500 });
 		}
 
 		// Check existing transaction
@@ -50,7 +62,12 @@ export const POST: RequestHandler = async ({ request }) => {
 			.single();
 
 		// Create payment via Pakasir
-		console.log('Creating payment via Pakasir:', { order_id, amount, payment_method });
+		console.log('Creating payment via Pakasir:', {
+			order_id,
+			amount,
+			payment_method,
+			quantity: qty
+		});
 		const payment = await pakasir.createTransaction(
 			order_id,
 			amount,
@@ -88,6 +105,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			const { error: updateError } = await supabaseAdmin
 				.from('transactions')
 				.update({
+					amount, // Update amount juga kalau quantity berubah
 					payment_method: payment.payment_method,
 					payment_number: payment.payment_number,
 					fee: payment.fee,
@@ -100,7 +118,14 @@ export const POST: RequestHandler = async ({ request }) => {
 				console.error('Failed to update transaction:', updateError);
 			}
 		}
-
+		// Tambahkan log ini
+		console.log('Final response:', {
+			order_id: payment.order_id,
+			amount: payment.amount,
+			calculated_amount: amount,
+			quantity: qty,
+			product_price: product.price
+		});
 		return json({
 			order_id: payment.order_id,
 			amount: payment.amount,

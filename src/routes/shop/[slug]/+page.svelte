@@ -114,7 +114,8 @@
 					product_id: product.id,
 					order_id: encodedOrderId,
 					payment_method: method,
-					user_id: user.id
+					user_id: user.id,
+					quantity: quantity // TAMBAH INI
 				})
 			});
 
@@ -497,6 +498,7 @@
 	<MethodSelectorModal
 		{product}
 		paymentMethods={[...PAYMENT_METHODS]}
+		totalAmount={subtotal}
 		onClose={closeMethodSelector}
 		onSelectQRIS={handleSelectQRIS}
 		onSelectOther={handleSelectOther}

@@ -13,6 +13,7 @@
 		paymentMethods: PaymentMethod[];
 		isCartCheckout?: boolean;
 		itemCount?: number;
+		totalAmount?: number; // TAMBAH INI
 		onClose: () => void;
 		onSelectQRIS: () => void;
 		onSelectOther: (method: string) => void;
@@ -23,6 +24,7 @@
 		paymentMethods,
 		isCartCheckout = false,
 		itemCount = 1,
+		totalAmount, // TAMBAH INI
 		onClose,
 		onSelectQRIS,
 		onSelectOther
@@ -31,6 +33,9 @@
 	let selectedMethod = $state('');
 
 	const otherMethods = $derived(paymentMethods.filter((m) => m.value !== 'qris'));
+
+	// Gunakan totalAmount kalau ada, kalau tidak pakai product.price
+	const displayAmount = $derived(totalAmount || product.price);
 
 	function handleContinue() {
 		if (!selectedMethod || selectedMethod === '') {
@@ -58,11 +63,10 @@
 				<div class="font-semibold">{product.name}</div>
 			{/if}
 			<div class="mt-2 text-xl font-bold text-primary">
-				{formatCurrency(product.price)}
+				{formatCurrency(displayAmount)}
 			</div>
 		</div>
 
-		<!-- Rest of the component stays the same -->
 		<button class="btn mb-4 btn-block btn-lg btn-primary" onclick={onSelectQRIS}>
 			<span class="text-2xl">📱</span>
 			<div class="text-left">

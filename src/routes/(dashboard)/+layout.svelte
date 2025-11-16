@@ -15,7 +15,7 @@
 	} from '@lucide/svelte';
 
 	let { data, children } = $props();
-	let processingCount = $state(0);
+	// let processingCount = $state(0);
 
 	const user = $derived(data.user);
 	const isSuperAdmin = $derived(user.role === 'superadmin');
@@ -26,32 +26,8 @@
 		{ href: '/coupons', icon: Ticket, label: 'Kupon' },
 		{ href: '/transaction', icon: CreditCard, label: 'Transaksi' },
 		{ href: '/users', icon: Users, label: 'Kelola User' },
-		{ href: '/orders-processing', icon: PackagePlus, label: 'Pesanan Baru', badge: true }
+		{ href: '/orders-processing', icon: PackagePlus, label: 'Pesanan Baru' }
 	];
-
-	onMount(() => {
-		if (!isSuperAdmin) {
-			console.log('User bukan superadmin, skip fetch orders');
-			return;
-		}
-
-		const checkOrders = async () => {
-			try {
-				const res = await fetch('/api/admin/orders-processing');
-				if (res.ok) {
-					const data = await res.json();
-					processingCount = data.length;
-				}
-			} catch (error) {
-				console.error('Check orders error:', error);
-			}
-		};
-
-		checkOrders();
-		const interval = setInterval(checkOrders, 10000);
-
-		return () => clearInterval(interval);
-	});
 
 	async function handleLogout() {
 		const supabase = getSupabaseClient();
@@ -117,9 +93,6 @@
 						>
 							<span class="text-xl"><item.icon size="20" /> </span>
 							<span>{item.label}</span>
-							{#if item.badge && processingCount > 0}
-								<span class="badge badge-sm badge-error">{processingCount}</span>
-							{/if}
 						</a>
 					</li>
 				{/each}

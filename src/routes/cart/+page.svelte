@@ -494,6 +494,7 @@
 		paymentMethods={[...PAYMENT_METHODS]}
 		isCartCheckout={true}
 		itemCount={selectedItems.size}
+		{totalAmount}
 		onClose={closeMethodSelector}
 		onSelectQRIS={handleSelectQRIS}
 		onSelectOther={handleSelectOther}
