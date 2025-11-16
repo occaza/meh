@@ -15,7 +15,7 @@ export * from './constants/payment.constants';
 
 // STORES
 export * from './stores/cart.store';
-export * from './stores/auth.store'; // ✨ Tambah ini
+export * from './stores/auth.store';
 
 // TYPES
 export * from './types/types';
@@ -25,3 +25,4 @@ export * from './utils/format.utils';
 export * from './utils/product.utils';
 export * from './utils/status.utils';
 export * from './utils/upload.utils';
+export * from './utils/order.utils'; // ← Tambah ini

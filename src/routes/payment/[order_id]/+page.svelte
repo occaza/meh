@@ -16,7 +16,7 @@
 	let debugInfo = $state('');
 
 	const orderId = $derived($page.params.order_id);
-	const displayOrderId = $derived(decodeOrderId(orderId));
+	const displayOrderId = $derived(decodeOrderId(orderId ?? ''));
 
 	onMount(async () => {
 		if (!browser) return;
