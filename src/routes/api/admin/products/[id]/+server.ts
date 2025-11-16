@@ -92,7 +92,8 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 				images: images || [],
 				stock: stock !== undefined ? parseInt(stock.toString()) : 0,
 				discount_percentage: discount_percentage ? parseInt(discount_percentage.toString()) : null,
-				discount_end_date: discount_end_date || null
+				discount_end_date: discount_end_date || null,
+				faq: faq || null // Tambah baris ini
 			})
 			.eq('id', productId)
 			.select()
