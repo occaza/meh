@@ -6,7 +6,10 @@
 	import { authUser } from '$lib/stores/auth.store';
 	import { uploadAvatar, deleteAvatar } from '$lib/utils/avatar.utils';
 
-	const user = $derived($authUser);
+	let { data } = $props(); // Tambah ini
+
+	// Ganti ini
+	const user = $derived(data.user);
 
 	let profile = $state({
 		email: '',
@@ -33,11 +36,7 @@
 	let passwordLoading = $state(false);
 
 	onMount(async () => {
-		if (!user) {
-			goto('/login');
-			return;
-		}
-
+		// Hapus check user di sini karena sudah di server
 		await loadProfile();
 	});
 

@@ -31,6 +31,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		return json({
 			id: user.id,
 			email: user.email,
+			role: user.role, // Tambah ini
 			full_name: roleData?.full_name || '',
 			phone_number: roleData?.phone_number || '',
 			avatar_url: profile?.avatar_url || null,

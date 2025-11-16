@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	// import { getSupabaseClient } from '$lib/client/supabase';
 	import { getSupabaseClient } from '$lib';
 	import { onMount } from 'svelte';
 
@@ -15,9 +14,19 @@
 			data: { session }
 		} = await supabase.auth.getSession();
 
-		// Jika sesi sudah ada, redirect langsung
+		// Jika sesi sudah ada, redirect ke halaman yang sesuai
 		if (session) {
-			await goto('/dashboard');
+			// Cek role user
+			const res = await fetch('/api/profile');
+			if (res.ok) {
+				const profile = await res.json();
+				// Jika superadmin, ke dashboard. Jika user biasa, ke shop
+				if (profile.role === 'superadmin') {
+					await goto('/dashboard');
+				} else {
+					await goto('/shop');
+				}
+			}
 		}
 	});
 
@@ -50,8 +59,20 @@
 				});
 
 				if (res.ok) {
-					// Redirect ke dashboard setelah session tersimpan
-					goto('/dashboard');
+					// Cek role untuk redirect
+					const profileRes = await fetch('/api/profile');
+					if (profileRes.ok) {
+						const profile = await profileRes.json();
+						// Jika superadmin, ke dashboard. Jika user biasa, ke shop
+						if (profile.role === 'superadmin') {
+							goto('/dashboard');
+						} else {
+							goto('/shop');
+						}
+					} else {
+						// Fallback ke shop jika gagal cek role
+						goto('/shop');
+					}
 				} else {
 					error = 'Gagal menyimpan session';
 				}
@@ -67,7 +88,7 @@
 <div class="flex min-h-screen items-center justify-center bg-base-200">
 	<div class="card w-96 bg-base-100 shadow-xl">
 		<div class="card-body">
-			<h2 class="card-title text-center text-2xl font-bold">Login Admin</h2>
+			<h2 class="card-title text-center text-2xl font-bold">Login</h2>
 
 			{#if error}
 				<div class="alert alert-error">
