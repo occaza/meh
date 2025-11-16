@@ -76,7 +76,16 @@
 				uploadingImages = true;
 				const uploadPromises = Array.from(imageFiles).map((file) => uploadProductImage(file));
 				const results = await Promise.all(uploadPromises);
-				uploadedImageUrls = results.filter((url) => url !== null) as string[];
+				// Normalize results to string URLs: handle cases where uploadProductImage returns a string, null,
+				// or an object that contains a `url` property.
+				uploadedImageUrls = results.reduce<string[]>((acc, r) => {
+					if (typeof r === 'string') {
+						acc.push(r);
+					} else if (r && typeof (r as any).url === 'string') {
+						acc.push((r as any).url);
+					}
+					return acc;
+				}, []);
 				uploadingImages = false;
 
 				if (uploadedImageUrls.length === 0) {
