@@ -139,23 +139,18 @@
 		try {
 			const note = tempNotes[itemId] || '';
 
-			console.log('Saving note:', { itemId, note });
-
 			const res = await fetch(`/api/cart/${itemId}/note`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ note })
 			});
 
-			const data = await res.json();
-			console.log('Note save response:', data);
-
 			if (res.ok) {
+				// Reload cart untuk dapat data terbaru
 				await cartStore.load();
 				editingNote = null;
-				alert('Catatan berhasil disimpan');
 			} else {
-				console.error('Save note failed:', data);
+				const data = await res.json();
 				alert('Gagal menyimpan catatan: ' + (data.error || 'Unknown error'));
 			}
 		} catch (error) {

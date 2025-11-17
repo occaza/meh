@@ -35,9 +35,6 @@ export const GET: RequestHandler = async ({ url }) => {
 					stock,
 					discount_percentage,
 					discount_end_date
-				),
-				cart_notes (
-					note
 				)
 			`
 			)
@@ -49,15 +46,24 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({ error: 'Failed to load cart' }, { status: 500 });
 		}
 
-		console.log('Raw cart data:', JSON.stringify(data, null, 2));
+		// Ambil notes secara terpisah
+		const cartIds = (data || []).map((item) => item.id);
+
+		let notesMap = new Map<string, string>();
+
+		if (cartIds.length > 0) {
+			const { data: notes } = await supabaseAdmin
+				.from('cart_notes')
+				.select('cart_id, note')
+				.in('cart_id', cartIds);
+
+			notesMap = new Map((notes || []).map((n) => [n.cart_id, n.note]));
+		}
 
 		const transformedData = (data || []).map((item) => ({
 			...item,
-			note: item.cart_notes?.[0]?.note || null,
-			cart_notes: undefined
+			note: notesMap.get(item.id) || null
 		}));
-
-		console.log('Transformed cart data:', JSON.stringify(transformedData, null, 2));
 
 		return json(transformedData);
 	} catch (error) {
