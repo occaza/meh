@@ -116,7 +116,7 @@
 					payment_method: method,
 					user_id: user.id,
 					quantity: quantity,
-					note: note // TAMBAH INI
+					note: note
 				})
 			});
 
