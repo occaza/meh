@@ -1,11 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { Navbar, formatCurrency, formatDate } from '$lib';
-	// import { authUser } from '$lib/stores/auth.store';
-	import { getStatusBadge, getStatusText } from '$lib/utils/status.utils';
-
-	let { data } = $props();
+	import { Navbar, formatCurrency, formatDate, getStatusBadge, getStatusText } from '$lib';
+	import { formatPaymentMethod } from '$lib/utils/payment.utils';
 
 	type OrderItem = {
 		product: {
@@ -15,6 +11,7 @@
 			price: number;
 		};
 		amount: number;
+		note?: string;
 	};
 
 	type Order = {
@@ -27,38 +24,13 @@
 		total: number;
 	};
 
-	let orders = $state<Order[]>([]);
-	let loading = $state(true);
-	let filter = $state('all');
+	let { data } = $props();
 
-	// Ganti ini
 	const user = $derived(data.user);
+	const orders = $derived<Order[]>(data.orders || []);
+	const loading = $derived(data.loading || false);
 
-	onMount(async () => {
-		if (!user) {
-			goto('/login');
-			return;
-		}
-
-		await loadOrders();
-	});
-
-	async function loadOrders() {
-		if (!user) return;
-
-		loading = true;
-		try {
-			const res = await fetch(`/api/my-orders?user_id=${user.id}`);
-			if (res.ok) {
-				const data = await res.json();
-				orders = data;
-			}
-		} catch (error) {
-			console.error('Failed to load orders:', error);
-		} finally {
-			loading = false;
-		}
-	}
+	let filter = $state('all');
 
 	const filteredOrders = $derived(
 		filter === 'all' ? orders : orders.filter((o) => o.status === filter)
@@ -177,10 +149,12 @@
 							</div>
 
 							{#if order.payment_method}
-								<div class="mt-4 flex items-center gap-2 text-sm text-base-content/70">
-									<span>Metode Pembayaran:</span>
-									<span class="font-semibold">{order.payment_method}</span>
-								</div>
+								{#if order.payment_method}
+									<div class="mt-4 flex items-center gap-2 text-sm text-base-content/70">
+										<span>Metode Pembayaran:</span>
+										<span class="font-semibold">{formatPaymentMethod(order.payment_method)}</span>
+									</div>
+								{/if}
 							{/if}
 
 							{#if order.status === 'completed' && order.completed_at}
@@ -195,7 +169,7 @@
 									<a href="/payment/{order.order_id}" class="btn btn-sm btn-primary">
 										💳 Bayar Sekarang
 									</a>
-									<button class="btn btn-outline btn-sm" onclick={() => loadOrders()}>
+									<button class="btn btn-outline btn-sm" onclick={() => window.location.reload()}>
 										🔄 Refresh Status
 									</button>
 								</div>

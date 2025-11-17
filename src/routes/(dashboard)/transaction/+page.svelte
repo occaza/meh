@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { formatCurrency, formatShortDate } from '$lib/utils/format.utils';
 	import { getStatusBadge } from '$lib/utils/status.utils';
+	import { formatPaymentMethod } from '$lib/utils/payment.utils';
 
 	type TransactionWithProduct = {
 		order_id: string;
@@ -112,7 +113,7 @@
 								</span>
 							</td>
 							<td class="text-sm">
-								{transaction.payment_method || '-'}
+								{formatPaymentMethod(transaction.payment_method)}
 							</td>
 							<td class="text-sm">
 								{formatShortDate(transaction.completed_at || transaction.created_at)}

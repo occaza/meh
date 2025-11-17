@@ -2,8 +2,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { formatCurrency, formatDate } from '$lib/utils/format.utils';
-	import { getStatusBadge, getStatusText } from '$lib/utils/status.utils';
+	import {
+		formatPaymentMethod,
+		getStatusBadge,
+		getStatusText,
+		formatCurrency,
+		formatDate
+	} from '$lib';
 
 	type ProductInfo = {
 		name: string;
@@ -136,7 +141,7 @@
 
 					<div class="flex justify-between">
 						<span class="text-base-content/70">Metode Pembayaran:</span>
-						<span class="font-semibold">{transaction.payment_method || '-'}</span>
+						<span class="font-semibold">{formatPaymentMethod(transaction.payment_method)}</span>
 					</div>
 
 					<div class="divider"></div>

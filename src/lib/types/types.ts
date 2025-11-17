@@ -97,5 +97,5 @@ export type OrderItem = {
 		price: number;
 	};
 	amount: number;
-	note?: string; // TAMBAH INI
+	note?: string;
 };

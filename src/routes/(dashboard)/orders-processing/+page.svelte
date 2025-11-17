@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import { formatCurrency, formatDate } from '$lib/utils/format.utils';
+	import { formatPaymentMethod } from '$lib/utils/payment.utils';
 
 	let { data } = $props();
 
@@ -168,7 +169,7 @@
 
 						<div class="mt-4 flex items-center gap-2 text-sm text-base-content/70">
 							<span>Metode:</span>
-							<span class="font-semibold">{order.payment_method}</span>
+							<span class="font-semibold">{formatPaymentMethod(order.payment_method)}</span>
 						</div>
 
 						<div class="card-actions justify-end">
