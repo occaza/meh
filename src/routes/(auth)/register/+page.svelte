@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { getSupabaseClient } from '$lib/client/supabase';
+	import { Eye, EyeOff } from '@lucide/svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -11,6 +12,8 @@
 	let error = $state('');
 	let success = $state(false);
 	let successMessage = $state('');
+	let showPassword = $state(false);
+	let showConfirm = $state(false);
 
 	async function handleRegister() {
 		loading = true;
@@ -80,9 +83,13 @@
 	}
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-base-200">
+<svelte:head>
+	<title>Register - JualFB</title>
+</svelte:head>
+
+<div class="flex min-h-screen items-center justify-center bg-base-200 px-4">
 	<div class="card w-full max-w-md bg-base-100 shadow-xl">
-		<div class="card-body">
+		<div class="card-body space-y-4">
 			<h2 class="card-title text-center text-2xl font-bold">Register</h2>
 
 			{#if success}
@@ -109,9 +116,9 @@
 					</div>
 				</div>
 
-				<div class="mt-4 text-center">
+				<div class="text-center">
 					<p class="text-sm text-base-content/70">Tidak menerima email?</p>
-					<p class="text-xs text-base-content/50">Cek folder spam/junk Anda</p>
+					<p class="text-xs text-base-content/50">Cek folder spam atau junk</p>
 				</div>
 			{:else}
 				{#if error}
@@ -138,6 +145,7 @@
 						e.preventDefault();
 						handleRegister();
 					}}
+					class="space-y-4"
 				>
 					<div class="form-control">
 						<label class="label" for="fullName">
@@ -147,14 +155,14 @@
 							id="fullName"
 							type="text"
 							placeholder="John Doe"
-							class="input-bordered input"
+							class="input-bordered input w-full"
 							bind:value={fullName}
 							autocomplete="name"
 							required
 						/>
 					</div>
 
-					<div class="form-control mt-4">
+					<div class="form-control">
 						<label class="label" for="phoneNumber">
 							<span class="label-text">Nomor HP</span>
 						</label>
@@ -162,14 +170,14 @@
 							id="phoneNumber"
 							type="tel"
 							placeholder="08123456789"
-							class="input-bordered input"
+							class="input-bordered input w-full"
 							autocomplete="tel"
 							bind:value={phoneNumber}
 							required
 						/>
 					</div>
 
-					<div class="form-control mt-4">
+					<div class="form-control">
 						<label class="label" for="email">
 							<span class="label-text">Email</span>
 						</label>
@@ -177,56 +185,85 @@
 							id="email"
 							type="email"
 							placeholder="john@example.com"
-							class="input-bordered input"
+							class="input-bordered input w-full"
 							autocomplete="email"
 							bind:value={email}
 							required
 						/>
 					</div>
 
-					<div class="form-control mt-4">
+					<div class="form-control">
 						<label class="label" for="password">
 							<span class="label-text">Password</span>
 						</label>
-						<input
-							id="password"
-							type="password"
-							placeholder="••••••••"
-							class="input-bordered input"
-							autocomplete="new-password"
-							bind:value={password}
-							required
-						/>
+
+						<div class="relative flex items-center">
+							<input
+								id="password"
+								type={showPassword ? 'text' : 'password'}
+								placeholder="••••••••"
+								class="input-bordered input w-full pr-12"
+								autocomplete="new-password"
+								bind:value={password}
+								required
+							/>
+
+							<button
+								type="button"
+								class="btn absolute right-3 btn-circle btn-ghost btn-xs"
+								onclick={() => (showPassword = !showPassword)}
+							>
+								{#if showPassword}
+									<EyeOff size="16" />
+								{:else}
+									<Eye size="16" />
+								{/if}
+							</button>
+						</div>
+
 						<div class="label">
 							<span class="label-text-alt">Minimal 6 karakter</span>
 						</div>
 					</div>
 
-					<div class="form-control mt-2">
+					<div class="form-control">
 						<label class="label" for="confirmPassword">
 							<span class="label-text">Konfirmasi Password</span>
 						</label>
-						<input
-							id="confirmPassword"
-							type="password"
-							placeholder="••••••••"
-							class="input-bordered input"
-							autocomplete="new-password"
-							bind:value={confirmPassword}
-							required
-						/>
+
+						<div class="relative">
+							<input
+								id="confirmPassword"
+								type={showConfirm ? 'text' : 'password'}
+								placeholder="••••••••"
+								class="input-bordered input w-full pr-12"
+								autocomplete="new-password"
+								bind:value={confirmPassword}
+								required
+							/>
+
+							<button
+								type="button"
+								class="btn absolute top-1/2 right-2 -translate-y-1/2 btn-ghost btn-xs"
+								onclick={() => (showConfirm = !showConfirm)}
+							>
+								{#if showConfirm}
+									<EyeOff size="16" />
+								{:else}
+									<Eye size="16" />
+								{/if}
+							</button>
+						</div>
 					</div>
 
-					<div class="form-control mt-6">
-						<button type="submit" class="btn btn-primary" disabled={loading}>
-							{#if loading}
-								<span class="loading loading-sm loading-spinner"></span>
-								Loading...
-							{:else}
-								Register
-							{/if}
-						</button>
-					</div>
+					<button type="submit" class="btn w-full btn-primary" disabled={loading}>
+						{#if loading}
+							<span class="loading loading-sm loading-spinner"></span>
+							Loading...
+						{:else}
+							Register
+						{/if}
+					</button>
 				</form>
 
 				<div class="divider">ATAU</div>
@@ -237,7 +274,7 @@
 				</div>
 			{/if}
 
-			<div class="mt-2 text-center text-sm">
+			<div class="text-center text-sm">
 				<a href="/" class="link">Kembali ke Beranda</a>
 			</div>
 		</div>
