@@ -15,7 +15,6 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Get cart items dengan notes
 		const { data, error } = await supabaseAdmin
 			.from('carts')
 			.select(
@@ -50,12 +49,15 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({ error: 'Failed to load cart' }, { status: 500 });
 		}
 
-		// Transform data untuk include note di level cart item
+		console.log('Raw cart data:', JSON.stringify(data, null, 2));
+
 		const transformedData = (data || []).map((item) => ({
 			...item,
 			note: item.cart_notes?.[0]?.note || null,
-			cart_notes: undefined // Remove nested object
+			cart_notes: undefined
 		}));
+
+		console.log('Transformed cart data:', JSON.stringify(transformedData, null, 2));
 
 		return json(transformedData);
 	} catch (error) {

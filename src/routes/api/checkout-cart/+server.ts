@@ -97,6 +97,20 @@ export const POST: RequestHandler = async ({ request }) => {
 				note: item.note.trim()
 			}));
 
+		console.log('Inserting notes:', noteInserts);
+
+		if (noteInserts.length > 0) {
+			const { error: noteError } = await supabaseAdmin
+				.from('transaction_notes')
+				.insert(noteInserts);
+
+			if (noteError) {
+				console.error('Failed to save transaction notes:', noteError);
+			} else {
+				console.log('Transaction notes saved successfully');
+			}
+		}
+
 		if (noteInserts.length > 0) {
 			await supabaseAdmin.from('transaction_notes').insert(noteInserts);
 		}

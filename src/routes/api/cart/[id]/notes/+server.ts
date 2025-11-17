@@ -2,12 +2,13 @@ import { json } from '@sveltejs/kit';
 import { getSupabaseAdmin } from '$lib/server/supabase';
 import type { RequestHandler } from './$types';
 
-// Update note untuk cart item
 export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		const { id } = params;
 		const body = await request.json();
 		const { note } = body;
+
+		console.log('Update note request:', { cart_id: id, note });
 
 		if (!id) {
 			return json({ error: 'Cart item ID required' }, { status: 400 });
@@ -15,7 +16,6 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Cek apakah note sudah ada
 		const { data: existing } = await supabaseAdmin
 			.from('cart_notes')
 			.select('id')
@@ -23,28 +23,36 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			.single();
 
 		if (existing) {
-			// Update existing note
 			const { error } = await supabaseAdmin
 				.from('cart_notes')
 				.update({
-					note: note || null,
+					note: note?.trim() || null,
 					updated_at: new Date().toISOString()
 				})
 				.eq('cart_id', id);
 
 			if (error) {
+				console.error('Update note error:', error);
 				return json({ error: 'Failed to update note' }, { status: 500 });
 			}
+
+			console.log('Note updated successfully');
 		} else {
-			// Insert new note
+			if (!note?.trim()) {
+				return json({ success: true });
+			}
+
 			const { error } = await supabaseAdmin.from('cart_notes').insert({
 				cart_id: id,
-				note: note || null
+				note: note.trim()
 			});
 
 			if (error) {
+				console.error('Insert note error:', error);
 				return json({ error: 'Failed to add note' }, { status: 500 });
 			}
+
+			console.log('Note created successfully');
 		}
 
 		return json({ success: true });
