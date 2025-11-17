@@ -2,13 +2,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import {
-		formatPaymentMethod,
-		getStatusBadge,
-		getStatusText,
-		formatCurrency,
-		formatDate
-	} from '$lib';
+	import { getStatusBadge, getStatusText, formatCurrency, formatDate } from '$lib';
+	import { formatPaymentMethod } from '$lib/utils/payment.utils';
 
 	type ProductInfo = {
 		name: string;
