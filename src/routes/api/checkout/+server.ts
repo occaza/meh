@@ -103,11 +103,15 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// Insert note jika ada
 			if (note && note.trim()) {
-				await supabaseAdmin.from('transaction_notes').insert({
-					order_id: encodedOrderId,
+				const { error: noteError } = await supabaseAdmin.from('transaction_notes').insert({
+					order_id: order_id,
 					product_id,
 					note: note.trim()
 				});
+
+				if (noteError) {
+					console.error('Failed to save note:', noteError);
+				}
 			}
 		} else {
 			// Update existing transaction with payment info
