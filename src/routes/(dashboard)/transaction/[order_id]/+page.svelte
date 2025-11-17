@@ -15,6 +15,7 @@
 	type TransactionItem = {
 		product: ProductInfo;
 		amount: number;
+		note?: string;
 	};
 
 	type TransactionDetail = {
@@ -110,6 +111,14 @@
 												{formatCurrency(item.amount)}
 											</div>
 										</div>
+										{#if item.note}
+											<div class="mt-3 rounded bg-base-300 p-2">
+												<div class="text-xs font-semibold text-base-content/70">
+													Catatan dari Pembeli:
+												</div>
+												<div class="text-sm">{item.note}</div>
+											</div>
+										{/if}
 									</div>
 								{/if}
 							{/each}

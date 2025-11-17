@@ -26,16 +26,6 @@ export type Transaction = {
 	processed_by?: string; // Tambah ini
 };
 
-export type CartItem = {
-	id: string;
-	user_id: string;
-	product_id: string;
-	quantity: number;
-	created_at: string;
-	updated_at: string;
-	product?: Product;
-};
-
 export type Coupon = {
 	id: string;
 	code: string;
@@ -67,4 +57,33 @@ export type AppliedCoupon = {
 	coupon: Coupon;
 	discount_amount: number;
 	final_amount: number;
+};
+
+// Tambahkan di bagian bawah file
+export type CartNote = {
+	id: string;
+	cart_id: string;
+	note: string;
+	created_at: string;
+	updated_at: string;
+};
+
+export type TransactionNote = {
+	id: string;
+	order_id: string;
+	product_id: string;
+	note: string;
+	created_at: string;
+};
+
+// Update CartItem type
+export type CartItem = {
+	id: string;
+	user_id: string;
+	product_id: string;
+	quantity: number;
+	created_at: string;
+	updated_at: string;
+	product?: Product;
+	note?: string; // Tambah ini
 };

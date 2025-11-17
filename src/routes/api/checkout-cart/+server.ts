@@ -89,6 +89,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.error('Failed to insert transactions:', insertError);
 			return json({ error: 'Failed to create transactions' }, { status: 500 });
 		}
+		const noteInserts = cart_items
+			.filter((item: any) => item.note && item.note.trim())
+			.map((item: any) => ({
+				order_id: order_id,
+				product_id: item.product_id,
+				note: item.note.trim()
+			}));
+
+		if (noteInserts.length > 0) {
+			await supabaseAdmin.from('transaction_notes').insert(noteInserts);
+		}
 
 		return json({
 			order_id: payment.order_id,

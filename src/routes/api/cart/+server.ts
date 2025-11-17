@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '$lib/server/supabase';
 import type { RequestHandler } from './$types';
 
 // GET - Load cart items
+// Ubah bagian GET handler
 export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const userId = url.searchParams.get('user_id');
@@ -14,6 +15,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
+		// Get cart items dengan notes
 		const { data, error } = await supabaseAdmin
 			.from('carts')
 			.select(
@@ -34,6 +36,9 @@ export const GET: RequestHandler = async ({ url }) => {
 					stock,
 					discount_percentage,
 					discount_end_date
+				),
+				cart_notes (
+					note
 				)
 			`
 			)
@@ -45,7 +50,14 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({ error: 'Failed to load cart' }, { status: 500 });
 		}
 
-		return json(data || []);
+		// Transform data untuk include note di level cart item
+		const transformedData = (data || []).map((item) => ({
+			...item,
+			note: item.cart_notes?.[0]?.note || null,
+			cart_notes: undefined // Remove nested object
+		}));
+
+		return json(transformedData);
 	} catch (error) {
 		console.error('Get cart error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });

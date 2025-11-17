@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const body = await request.json();
-		const { product_id, order_id, payment_method = 'qris', user_id, quantity = 1 } = body;
+		const { product_id, order_id, payment_method = 'qris', user_id, quantity = 1, note } = body; // Tambah note
 
 		if (!product_id || typeof product_id !== 'string') {
 			return json({ error: 'Invalid or missing product_id' }, { status: 400 });
@@ -99,6 +99,15 @@ export const POST: RequestHandler = async ({ request }) => {
 			if (insertError) {
 				console.error('Failed to insert transaction:', insertError);
 				return json({ error: 'Failed to create transaction' }, { status: 500 });
+			}
+
+			// Insert note jika ada
+			if (note && note.trim()) {
+				await supabaseAdmin.from('transaction_notes').insert({
+					order_id: encodedOrderId,
+					product_id,
+					note: note.trim()
+				});
 			}
 		} else {
 			// Update existing transaction with payment info

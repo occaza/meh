@@ -33,6 +33,8 @@
 	let qrImageUrl = $state('');
 	let pollingInterval = $state<any>(null);
 	let isSimulating = $state(false);
+	let editingNote = $state<string | null>(null);
+	let tempNotes = $state<Record<string, string>>({});
 
 	$effect(() => {
 		cart = $cartStore;
@@ -133,6 +135,38 @@
 		showMethodSelector = true;
 	}
 
+	async function updateNote(itemId: string) {
+		try {
+			const note = tempNotes[itemId] || '';
+
+			const res = await fetch(`/api/cart/${itemId}/note`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ note })
+			});
+
+			if (res.ok) {
+				await cartStore.load();
+				editingNote = null;
+			} else {
+				alert('Gagal menyimpan catatan');
+			}
+		} catch (error) {
+			console.error('Update note error:', error);
+			alert('Terjadi kesalahan');
+		}
+	}
+
+	function startEditNote(item: CartItem) {
+		editingNote = item.id;
+		tempNotes[item.id] = item.note || '';
+	}
+
+	function cancelEditNote() {
+		editingNote = null;
+		tempNotes = {};
+	}
+
 	async function processCheckout(method: string) {
 		if (!user) return;
 
@@ -143,8 +177,8 @@
 		try {
 			const selectedCartItems = cart.filter((item) => selectedItems.has(item.id));
 
-			const orderId = generateOrderId(); // Format: ADF/16112025/A7K9M2X5
-			const encodedOrderId = encodeOrderId(orderId); // Format: ADF-16112025-A7K9M2X5
+			const orderId = generateOrderId();
+			const encodedOrderId = encodeOrderId(orderId);
 
 			const totalAmount = selectedCartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
 
@@ -154,9 +188,10 @@
 				body: JSON.stringify({
 					cart_items: selectedCartItems.map((item) => ({
 						product_id: item.product_id,
-						quantity: item.quantity
+						quantity: item.quantity,
+						note: item.note || null // TAMBAH INI
 					})),
-					order_id: encodedOrderId, // Kirim yang encoded
+					order_id: encodedOrderId,
 					payment_method: method,
 					total_amount: totalAmount,
 					user_id: user.id
@@ -428,6 +463,45 @@
 												</div>
 											{/if}
 										</div>
+									</div>
+									<div class="mt-3">
+										{#if editingNote === item.id}
+											<div class="space-y-2">
+												<textarea
+													class="textarea-bordered textarea w-full textarea-sm"
+													placeholder="Catatan untuk penjual..."
+													bind:value={tempNotes[item.id]}
+													rows="2"
+												></textarea>
+												<div class="flex gap-2">
+													<button
+														class="btn btn-xs btn-primary"
+														onclick={() => updateNote(item.id)}
+													>
+														Simpan
+													</button>
+													<button class="btn btn-ghost btn-xs" onclick={cancelEditNote}>
+														Batal
+													</button>
+												</div>
+											</div>
+										{:else}
+											<div class="flex items-start justify-between">
+												<div class="flex-1">
+													{#if item.note}
+														<div class="text-xs text-base-content/70">
+															<span class="font-semibold">Catatan:</span>
+															{item.note}
+														</div>
+													{:else}
+														<div class="text-xs text-base-content/50">Belum ada catatan</div>
+													{/if}
+												</div>
+												<button class="btn btn-ghost btn-xs" onclick={() => startEditNote(item)}>
+													✏️ {item.note ? 'Edit' : 'Tambah'} Catatan
+												</button>
+											</div>
+										{/if}
 									</div>
 								</div>
 							</div>

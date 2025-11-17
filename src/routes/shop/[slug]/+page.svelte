@@ -26,7 +26,7 @@
 	let quantity = $state(1);
 	let addingToCart = $state(false);
 	let activeTab = $state<'detail' | 'faq'>('detail');
-
+	let note = $state(''); // TAMBAH INI
 	let showPayment = $state(false);
 	let showMethodSelector = $state(false);
 	let selectedMethod = $state('qris');
@@ -115,7 +115,8 @@
 					order_id: encodedOrderId,
 					payment_method: method,
 					user_id: user.id,
-					quantity: quantity // TAMBAH INI
+					quantity: quantity,
+					note: note // TAMBAH INI
 				})
 			});
 
@@ -404,7 +405,22 @@
 							</div>
 
 							<div class="divider my-3"></div>
+							<div class="form-control">
+								<label class="label" for="note">
+									<span class="label-text text-sm">Catatan untuk Penjual</span>
+								</label>
+								<textarea
+									id="note"
+									class="textarea-bordered textarea h-20 textarea-sm"
+									placeholder="Contoh: Tolong kirim warna merah"
+									bind:value={note}
+								></textarea>
+								<div class="label">
+									<span class="label-text-alt">Opsional</span>
+								</div>
+							</div>
 
+							<div class="divider my-3"></div>
 							<div class="flex items-center justify-between">
 								<span class="text-sm text-base-content/70">Subtotal</span>
 								<span class="text-xl font-bold">{formatCurrency(subtotal)}</span>
