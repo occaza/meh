@@ -7,13 +7,15 @@
 		CreditCard,
 		CircleCheck,
 		Clock,
-		TriangleAlert
+		TriangleAlert,
+		PackageCheck
 	} from '@lucide/svelte';
 
 	let stats = $state({
 		totalProducts: 0,
 		totalTransactions: 0,
 		completedTransactions: 0,
+		processingTransactions: 0,
 		pendingTransactions: 0,
 		totalRevenue: 0
 	});
@@ -57,7 +59,7 @@
 			<span class="loading loading-lg loading-spinner"></span>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-accent">
@@ -67,7 +69,7 @@
 					<div class="stat-value text-accent">
 						{formatCurrency(stats.totalRevenue)}
 					</div>
-					<div class="stat-desc">Dari transaksi yang selesai</div>
+					<div class="stat-desc">Dari transaksi selesai</div>
 				</div>
 			</div>
 
@@ -88,6 +90,7 @@
 					</div>
 					<div class="stat-title">Total Transaksi</div>
 					<div class="stat-value text-secondary">{stats.totalTransactions}</div>
+					<div class="stat-desc">Semua order</div>
 				</div>
 			</div>
 
@@ -103,11 +106,23 @@
 
 			<div class="stats shadow">
 				<div class="stat">
+					<div class="stat-figure text-info">
+						<PackageCheck size={32} />
+					</div>
+					<div class="stat-title">Menunggu Proses</div>
+					<div class="stat-value text-info">{stats.processingTransactions}</div>
+					<div class="stat-desc">Sudah dibayar</div>
+				</div>
+			</div>
+
+			<div class="stats shadow">
+				<div class="stat">
 					<div class="stat-figure text-warning">
 						<Clock size={32} />
 					</div>
 					<div class="stat-title">Transaksi Pending</div>
 					<div class="stat-value text-warning">{stats.pendingTransactions}</div>
+					<div class="stat-desc">Belum dibayar</div>
 				</div>
 			</div>
 		</div>
@@ -125,6 +140,12 @@
 							<CreditCard size={20} />
 							Lihat Semua Transaksi
 						</a>
+						{#if stats.processingTransactions > 0}
+							<a href="/orders-processing" class="btn btn-block btn-info">
+								<PackageCheck size={20} />
+								Proses Pesanan ({stats.processingTransactions})
+							</a>
+						{/if}
 					</div>
 				</div>
 			</div>
