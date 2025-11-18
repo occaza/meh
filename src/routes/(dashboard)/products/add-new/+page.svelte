@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { uploadProductImage } from '$lib/utils/upload.utils';
+	import { Save, ImagePlus } from '@lucide/svelte';
 
 	let name = $state('');
 	let description = $state('');
@@ -241,10 +242,10 @@
 						<span class="label-text">Gambar Produk (Maksimal 3, 100KB per gambar)</span>
 					</legend>
 
-					<div class="grid grid-cols-3 gap-4">
+					<div class="flex gap-2">
 						{#each imagePreviewUrls as url, index}
 							<div
-								class="relative aspect-square overflow-hidden rounded-lg border-2 border-base-300"
+								class="relative aspect-square w-30 overflow-hidden rounded-lg border-2 border-base-300"
 							>
 								<img src={url} alt="Preview {index + 1}" class="h-full w-full object-cover" />
 								<button
@@ -260,24 +261,11 @@
 						{#if imageFiles.length < 3}
 							<button
 								type="button"
-								class="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-base-300 transition-colors hover:border-primary hover:bg-base-200"
+								class="flex aspect-square w-30 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-base-300 transition-colors hover:border-primary hover:bg-base-200"
 								onclick={handleAddImageSlot}
 								disabled={loading}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="h-8 w-8"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M12 4v16m8-8H4"
-									/>
-								</svg>
+								<ImagePlus strokeWidth={1} />
 								<span class="text-xs">Tambah Foto</span>
 							</button>
 						{/if}
@@ -466,7 +454,7 @@
 							<span class="loading loading-sm loading-spinner"></span>
 							Menyimpan...
 						{:else}
-							<span>💾</span>
+							<span><Save /></span>
 							Simpan Produk
 						{/if}
 					</button>
