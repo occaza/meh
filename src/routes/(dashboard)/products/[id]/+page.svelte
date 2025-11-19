@@ -370,7 +370,7 @@
 							{#if existingImages.length + newImageFiles.length < 3}
 								<button
 									type="button"
-									class="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-base-300 bg-base-100 transition-all hover:border-primary hover:bg-primary/5"
+									class="group flex aspect-square w-40 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-base-300 bg-base-100 transition-all hover:border-primary hover:bg-primary/5"
 									onclick={handleAddNewImage}
 									disabled={loading}
 								>

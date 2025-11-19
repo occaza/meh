@@ -62,7 +62,7 @@
 			<span class="loading loading-lg loading-spinner"></span>
 		</div>
 	{:else if products.length}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
 			{#each products as product}
 				<div class="card bg-base-100 shadow-xl">
 					<div class="card-body">
