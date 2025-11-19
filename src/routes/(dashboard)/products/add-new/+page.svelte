@@ -1,14 +1,22 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { uploadProductImage } from '$lib/utils/upload.utils';
-	import { Save, ImagePlus } from '@lucide/svelte';
+	import {
+		Save,
+		ImagePlus,
+		CircleAlert,
+		MessageCircleX,
+		Image,
+		MessageCircleQuestionMark,
+		Box
+	} from '@lucide/svelte';
 
 	let name = $state('');
 	let description = $state('');
 	let detailDescription = $state('');
-	let price = $state(0);
+	let price: number | '' = $state('');
 	let stock = $state(0);
-	let discountPercentage = $state(0);
+	let discountPercentage = $state(2);
 	let discountEndDate = $state('');
 	let imageFiles = $state<File[]>([]); // Ubah dari FileList jadi array File
 	let imagePreviewUrls = $state<string[]>([]);
@@ -88,7 +96,7 @@
 			return;
 		}
 
-		if (price <= 0) {
+		if (Number(price) <= 0) {
 			error = 'Harga harus lebih dari 0';
 			loading = false;
 			return;
@@ -173,20 +181,29 @@
 	}
 </script>
 
-<div class="mx-auto max-w-4xl">
-	<div class="mb-8">
-		<a href="/products" class="btn btn-ghost btn-sm">
-			<span>←</span>
+<div class="mx-auto max-w-5xl">
+	<!-- Header -->
+	<div class="mb-6">
+		<a href="/products" class="btn gap-2 btn-ghost">
+			<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+			</svg>
 			Kembali
 		</a>
 	</div>
 
+	<!-- Main Card -->
 	<div class="card bg-base-100 shadow-xl">
-		<div class="card-body">
-			<h2 class="card-title text-2xl">Tambah Produk Baru</h2>
+		<div class="card-body p-8">
+			<!-- Title Section -->
+			<div class="mb-8">
+				<h2 class="text-3xl font-bold">Tambah Produk Baru</h2>
+				<p class="mt-2 text-base-content/70">Lengkapi informasi produk Anda</p>
+			</div>
 
+			<!-- Alerts -->
 			{#if error}
-				<div class="alert alert-error">
+				<div class="mb-6 alert alert-error">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="h-6 w-6 shrink-0 stroke-current"
@@ -205,7 +222,7 @@
 			{/if}
 
 			{#if uploadErrors.length > 0}
-				<div class="alert alert-warning">
+				<div class="mb-6 alert alert-warning">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="h-6 w-6 shrink-0 stroke-current"
@@ -220,7 +237,7 @@
 						/>
 					</svg>
 					<div>
-						<div class="font-semibold">Error Upload:</div>
+						<div class="font-semibold">Error Upload</div>
 						<ul class="mt-1 list-inside list-disc text-sm">
 							{#each uploadErrors as err}
 								<li>{err}</li>
@@ -236,193 +253,284 @@
 					handleSubmit();
 				}}
 			>
-				<!-- Section Upload Gambar Baru -->
-				<fieldset class="form-control">
-					<legend class="label">
-						<span class="label-text">Gambar Produk (Maksimal 3, 100KB per gambar)</span>
-					</legend>
+				<!-- Section 1: Gambar Produk -->
+				<div class="mb-6 rounded-lg bg-base-200/50 p-6">
+					<div class="mb-4 flex items-center gap-3">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-content"
+						>
+							<Image strokeWidth={1} />
+						</div>
 
-					<div class="flex gap-2">
+						<div>
+							<h3 class="text-lg font-semibold">Gambar Produk</h3>
+							<p class="text-sm text-base-content/70">
+								Upload hingga 3 foto, maksimal 100KB per foto
+							</p>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-3 gap-4">
 						{#each imagePreviewUrls as url, index}
 							<div
-								class="relative aspect-square w-30 overflow-hidden rounded-lg border-2 border-base-300"
+								class="group relative aspect-square overflow-hidden rounded-xl border-2 border-base-300 bg-base-100"
 							>
 								<img src={url} alt="Preview {index + 1}" class="h-full w-full object-cover" />
 								<button
 									type="button"
-									class="btn absolute top-1 right-1 btn-circle btn-xs btn-error"
+									title="tambah foto"
+									class="btn absolute top-2 right-2 btn-circle opacity-0 transition-opacity btn-sm btn-error group-hover:opacity-100"
 									onclick={() => removeImage(index)}
 								>
-									✕
+									<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M6 18L18 6M6 6l12 12"
+										/>
+									</svg>
 								</button>
+								<div class="absolute bottom-2 left-2 badge badge-sm badge-neutral">
+									Foto {index + 1}
+								</div>
 							</div>
 						{/each}
 
 						{#if imageFiles.length < 3}
 							<button
 								type="button"
-								class="flex aspect-square w-30 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-base-300 transition-colors hover:border-primary hover:bg-base-200"
+								class="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-base-300 bg-base-100 transition-all hover:border-primary hover:bg-primary/5"
 								onclick={handleAddImageSlot}
 								disabled={loading}
 							>
-								<ImagePlus strokeWidth={1} />
-								<span class="text-xs">Tambah Foto</span>
+								<div
+									class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 transition-colors group-hover:bg-primary/20"
+								>
+									<ImagePlus size={24} class="text-base-content/70 group-hover:text-primary" />
+								</div>
+								<span class="text-sm font-medium text-base-content/70">Tambah Foto</span>
 							</button>
 						{/if}
 					</div>
 
-					<div class="label">
-						<span class="label-text-alt">
-							Format: JPG, PNG, WEBP. Maksimal 100KB per gambar. Total {imageFiles.length}/3
-						</span>
+					<div class="mt-4 flex items-start gap-2 rounded-lg bg-info/10 p-3">
+						<svg
+							class="mt-0.5 h-5 w-5 shrink-0 text-info"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<div class="text-sm">
+							<p class="font-medium text-info">Format JPG, PNG, atau WEBP</p>
+							<p class="text-base-content/70">
+								Ukuran maksimal 100KB per gambar. Total {imageFiles.length}/3 foto
+							</p>
+						</div>
 					</div>
-				</fieldset>
+				</div>
 
-				<div class="divider"></div>
+				<!-- Section 2: Informasi Dasar -->
+				<div class="mb-6 rounded-lg bg-base-200/50 p-6">
+					<div class="mb-4 flex items-center gap-3">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-secondary-content"
+						>
+							<CircleAlert strokeWidth={2} />
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold">Informasi Dasar</h3>
+							<p class="text-sm text-base-content/70">Detail produk yang akan ditampilkan</p>
+						</div>
+					</div>
 
-				<!-- Sisanya sama seperti sebelumnya -->
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div class="form-control">
+					<div class="form-control flex flex-col">
 						<label class="label" for="name">
-							<span class="label-text">Nama Produk</span>
+							<span class="label-text font-medium">Nama Produk</span>
+							<span class="label-text-alt text-error">*</span>
 						</label>
 						<input
 							id="name"
 							type="text"
 							placeholder="Contoh: Paket Premium"
-							class="input-bordered input"
+							class="input-bordered input w-full"
 							bind:value={name}
 							required
 						/>
 					</div>
 
-					<div class="form-control">
-						<label class="label" for="price">
-							<span class="label-text">Harga (Rp)</span>
+					<div class="form-control mt-4 flex flex-col">
+						<label class="label" for="description">
+							<span class="label-text font-medium">Deskripsi Singkat</span>
+							<span class="label-text-alt text-error">*</span>
 						</label>
-						<input
-							id="price"
-							type="number"
-							placeholder="50000"
-							class="input-bordered input"
-							bind:value={price}
-							min="1"
-							step="1"
+						<textarea
+							id="description"
+							placeholder="Deskripsi singkat untuk card produk"
+							class="textarea-bordered textarea h-24 w-full resize-none"
+							bind:value={description}
 							required
-						/>
+						></textarea>
 					</div>
-				</div>
 
-				<div class="form-control mt-4">
-					<label class="label" for="description">
-						<span class="label-text">Deskripsi Singkat</span>
-					</label>
-					<textarea
-						id="description"
-						placeholder="Deskripsi singkat untuk card produk..."
-						class="textarea-bordered textarea h-20"
-						bind:value={description}
-						required
-					></textarea>
-				</div>
-
-				<div class="form-control mt-4">
-					<label class="label" for="detailDescription">
-						<span class="label-text">Detail Produk</span>
-					</label>
-					<textarea
-						id="detailDescription"
-						placeholder="Detail lengkap tentang produk..."
-						class="textarea-bordered textarea h-32"
-						bind:value={detailDescription}
-					></textarea>
-					<div class="label">
-						<span class="label-text-alt"
-							>Opsional. Jika kosong, akan menggunakan deskripsi singkat.</span
+					<div class="form-control mt-4 flex flex-col">
+						<label class="label" for="detailDescription">
+							<span class="label-text font-medium">Detail Produk</span>
+							<span class="label-text-alt">Opsional</span>
+						</label>
+						<textarea
+							id="detailDescription"
+							placeholder="Detail lengkap tentang produk"
+							class="textarea-bordered textarea h-40 w-full resize-none"
+							bind:value={detailDescription}
+						></textarea>
+						<span class="label-text-alt label">Jika kosong, akan menggunakan deskripsi singkat</span
 						>
 					</div>
 				</div>
 
-				<div class="divider"></div>
-
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<div class="form-control">
-						<label class="label" for="stock">
-							<span class="label-text">Stok</span>
-						</label>
-						<input
-							id="stock"
-							type="number"
-							placeholder="100"
-							class="input-bordered input"
-							bind:value={stock}
-							min="0"
-							step="1"
-							required
-						/>
-						<div class="label">
-							<span class="label-text-alt">Gunakan 999999 untuk unlimited</span>
+				<!-- Section 3: Stok & Diskon -->
+				<div class="mb-6 rounded-lg bg-base-200/50 p-6">
+					<div class="mb-4 flex items-center gap-3">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-content"
+						>
+							<Box strokeWidth={1} />
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold">Stok & Diskon</h3>
+							<p class="text-sm text-base-content/70">Atur ketersediaan dan harga spesial</p>
 						</div>
 					</div>
 
-					<div class="form-control">
-						<label class="label" for="discount">
-							<span class="label-text">Diskon (%)</span>
-						</label>
-						<input
-							id="discount"
-							type="number"
-							placeholder="0"
-							class="input-bordered input"
-							bind:value={discountPercentage}
-							min="0"
-							max="100"
-							step="1"
-						/>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div class="form-control flex flex-col">
+							<label class="label" for="price">
+								<span class="label-text font-medium">Harga</span>
+								<span class="label-text-alt text-error">*</span>
+							</label>
+							<div class="join w-full">
+								<span class="btn btn-disabled join-item">Rp</span>
+								<input
+									id="price"
+									type="number"
+									placeholder="50000"
+									class="input-bordered input join-item w-full"
+									bind:value={price}
+									min="1"
+									step="1"
+									required
+								/>
+							</div>
+						</div>
+						<div class="form-control flex flex-col">
+							<label class="label" for="stock">
+								<span class="label-text font-medium">Jumlah Stok</span>
+								<span class="label-text-alt text-error">*</span>
+							</label>
+							<input
+								id="stock"
+								type="number"
+								placeholder="100"
+								class="input-bordered input w-full"
+								bind:value={stock}
+								min="0"
+								step="1"
+								required
+							/>
+							<span class="label-text-alt label">Gunakan 999999 untuk unlimited</span>
+						</div>
+					</div>
+
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div class="form-control flex flex-col">
+							<label class="label" for="discount">
+								<span class="label-text font-medium">Diskon</span>
+							</label>
+							<div class="join w-full">
+								<input
+									id="discount"
+									type="number"
+									placeholder="0"
+									class="input-bordered input join-item w-full"
+									bind:value={discountPercentage}
+									min="0"
+									max="100"
+									step="1"
+								/>
+								<span class="btn btn-disabled join-item">%</span>
+							</div>
+						</div>
+						<div class="form-control mt-4 flex flex-col">
+							{#if discountPercentage > 0}
+								<label class="label" for="discountEndDate">
+									<span class="label-text font-medium">Berlaku Sampai</span>
+								</label>
+								<input
+									id="discountEndDate"
+									type="datetime-local"
+									class="input-bordered input w-full"
+									bind:value={discountEndDate}
+								/>
+								<span class="label-text-alt label">Kosongkan jika tanpa batas waktu</span>
+							{/if}
+						</div>
 					</div>
 				</div>
 
-				{#if discountPercentage > 0}
-					<div class="form-control mt-4">
-						<label class="label" for="discountEndDate">
-							<span class="label-text">Berlaku Sampai</span>
-						</label>
-						<input
-							id="discountEndDate"
-							type="datetime-local"
-							class="input-bordered input"
-							bind:value={discountEndDate}
-						/>
-						<div class="label">
-							<span class="label-text-alt">Opsional. Kosongkan jika tanpa batas waktu.</span>
+				<!-- Section 4: FAQ -->
+				<div class="mb-6 rounded-lg bg-base-200/50 p-6">
+					<div class="mb-4 flex items-center justify-between">
+						<div class="flex items-center gap-3">
+							<div
+								class="flex h-10 w-10 items-center justify-center rounded-lg bg-warning text-warning-content"
+							>
+								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+							</div>
+							<div>
+								<h3 class="text-lg font-semibold">FAQ Produk</h3>
+								<p class="text-sm text-base-content/70">Pertanyaan yang sering ditanyakan</p>
+							</div>
 						</div>
-					</div>
-				{/if}
-
-				<div class="divider"></div>
-
-				<div class="form-control">
-					<div class="mb-2 flex items-center justify-between">
-						<div class="label">
-							<span class="label-text">FAQ Produk</span>
-						</div>
-						<button type="button" class="btn btn-outline btn-sm" onclick={addFaqItem}>
-							+ Tambah FAQ
+						<button type="button" class="btn gap-2 btn-outline btn-sm" onclick={addFaqItem}>
+							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 4v16m8-8H4"
+								/>
+							</svg>
+							Tambah FAQ
 						</button>
 					</div>
 
 					{#if faqItems.length > 0}
-						<div class="space-y-4">
+						<div class="space-y-3">
 							{#each faqItems as item, index}
-								<div class="rounded-lg border border-base-300 p-4">
-									<div class="mb-2 flex items-center justify-between">
-										<span class="text-sm font-semibold">FAQ {index + 1}</span>
+								<div class="rounded-lg border border-base-300 bg-base-100 p-4">
+									<div class="mb-3 flex items-center justify-between">
+										<span class="badge badge-sm badge-neutral">FAQ {index + 1}</span>
 										<button
 											type="button"
 											class="btn btn-circle btn-ghost btn-xs"
 											onclick={() => removeFaqItem(index)}
 										>
-											✕
+											<MessageCircleX strokeWidth={1} />
 										</button>
 									</div>
 									<input
@@ -435,26 +543,35 @@
 										placeholder="Jawaban"
 										class="textarea-bordered textarea w-full textarea-sm"
 										bind:value={item.answer}
+										rows="2"
 									></textarea>
 								</div>
 							{/each}
 						</div>
+					{:else}
+						<div class="py-8 text-center text-base-content/50">
+							<div class="mx-auto mb-2 h-12 w-12">
+								<MessageCircleQuestionMark strokeWidth={1.5} size="50" />
+							</div>
+							<p class="text-sm">Belum ada FAQ. Klik tombol Tambah FAQ untuk memulai</p>
+						</div>
 					{/if}
 				</div>
 
-				<div class="card-actions justify-end">
+				<!-- Action Buttons -->
+				<div class="flex justify-end gap-3 border-t border-base-300 pt-4">
 					<button type="button" class="btn btn-ghost" onclick={() => goto('/products')}>
 						Batal
 					</button>
-					<button type="submit" class="btn btn-primary" disabled={loading || uploadingImages}>
+					<button type="submit" class="btn gap-2 btn-primary" disabled={loading || uploadingImages}>
 						{#if uploadingImages}
 							<span class="loading loading-sm loading-spinner"></span>
-							Upload Gambar...
+							Upload Gambar
 						{:else if loading}
 							<span class="loading loading-sm loading-spinner"></span>
-							Menyimpan...
+							Menyimpan
 						{:else}
-							<span><Save /></span>
+							<Save size={18} />
 							Simpan Produk
 						{/if}
 					</button>
