@@ -59,7 +59,7 @@
 			<span class="loading loading-lg loading-spinner"></span>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			<div class="stats shadow">
 				<div class="stat">
 					<div class="stat-figure text-accent">
@@ -67,7 +67,7 @@
 					</div>
 					<div class="stat-title">Total Pendapatan</div>
 					<div class="stat-value text-accent">
-						{formatCurrency(stats.totalRevenue)}
+						{formatCurrency(stats.totalRevenue / 1000)}K
 					</div>
 					<div class="stat-desc">Dari transaksi selesai</div>
 				</div>
@@ -174,7 +174,7 @@
 					{:else}
 						<div class="alert alert-success">
 							<CircleCheck size={20} />
-							<span>Semua produk stoknya aman</span>
+							<span>Tidak ada produk yang stoknya menipis</span>
 						</div>
 					{/if}
 				</div>
