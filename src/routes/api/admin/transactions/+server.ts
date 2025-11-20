@@ -39,7 +39,7 @@ export const GET: RequestHandler = async () => {
 
 		const userMap = new Map(userRoles?.map((u) => [u.user_id, u.full_name]) || []);
 
-		// Tambahkan nama pembeli ke setiap transaksi
+		// Tambahkan nama pembeli ke setiap transaksi SEBELUM return
 		const transactionsWithBuyer = (data || []).map((t) => ({
 			...t,
 			buyer_name: userMap.get(t.user_id) || 'Unknown'
