@@ -26,6 +26,7 @@
 		created_at: string;
 		products: string[];
 		product_count: number;
+		buyer_name?: string; // Tambah ini
 	};
 
 	let transactions = $state<TransactionWithProduct[]>([]);
@@ -77,7 +78,8 @@
 					completed_at: transaction.completed_at,
 					created_at: transaction.created_at,
 					products: [transaction.product.name],
-					product_count: 1
+					product_count: 1,
+					buyer_name: transaction.buyer_name
 				});
 			}
 		});
@@ -474,6 +476,7 @@
 				<thead>
 					<tr>
 						<th>Order ID</th>
+						<th>Pembeli</th>
 						<th>Produk</th>
 						<th>Total Amount</th>
 						<th>Status</th>
@@ -486,6 +489,7 @@
 					{#each paginatedTransactions() as transaction}
 						<tr class="hover">
 							<td class="font-mono text-sm">{transaction.order_id}</td>
+							<td class="text-sm">{transaction.buyer_name || 'Unknown'}</td>
 							<td>
 								{#if transaction.product_count === 1}
 									<span>{transaction.products[0]}</span>

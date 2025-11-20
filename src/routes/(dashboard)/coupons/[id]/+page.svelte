@@ -121,7 +121,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-5xl">
+<div>
 	<div class="mb-8">
 		<a href="/coupons" class="btn gap-2 btn-ghost btn-sm">
 			<ArrowLeft size={18} />

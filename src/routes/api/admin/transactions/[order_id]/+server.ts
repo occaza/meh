@@ -13,7 +13,6 @@ export const GET: RequestHandler = async ({ params }) => {
 
 		const supabaseAdmin = getSupabaseAdmin();
 
-		// Ambil transactions dengan notes
 		const { data, error } = await supabaseAdmin
 			.from('transactions')
 			.select(
@@ -25,6 +24,7 @@ export const GET: RequestHandler = async ({ params }) => {
 				completed_at,
 				created_at,
 				product_id,
+				user_id,
 				products (
 					name,
 					description,
@@ -41,7 +41,18 @@ export const GET: RequestHandler = async ({ params }) => {
 			return json({ error: 'Transaction not found' }, { status: 404 });
 		}
 
-		// Get notes untuk order ini
+		// Get user info
+		const userId = data[0].user_id;
+		const { data: userRole } = await supabaseAdmin
+			.from('user_roles')
+			.select('full_name, phone_number')
+			.eq('user_id', userId)
+			.single();
+
+		// Get user email
+		const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+		// Get notes
 		const { data: notes } = await supabaseAdmin
 			.from('transaction_notes')
 			.select('product_id, note')
@@ -58,10 +69,15 @@ export const GET: RequestHandler = async ({ params }) => {
 			payment_method: data[0].payment_method,
 			completed_at: data[0].completed_at,
 			created_at: data[0].created_at,
+			buyer: {
+				name: userRole?.full_name || 'Unknown',
+				email: userData?.user?.email || null,
+				phone: userRole?.phone_number || null
+			},
 			items: data.map((t) => ({
 				product: t.products,
 				amount: t.amount,
-				note: notesMap.get(t.product_id) || null // TAMBAH INI
+				note: notesMap.get(t.product_id) || null
 			}))
 		});
 	} catch (error) {

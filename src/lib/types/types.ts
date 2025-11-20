@@ -24,6 +24,7 @@ export type Transaction = {
 	completed_at?: string;
 	processing_started_at?: string; // Tambah ini
 	processed_by?: string; // Tambah ini
+	user_id: string; // Pastikan ada ini
 };
 
 export type Coupon = {

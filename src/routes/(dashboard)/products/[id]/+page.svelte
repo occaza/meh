@@ -221,7 +221,8 @@
 	}
 </script>
 
-<div class="mx-auto max-w-5xl">
+<!--div class="mx-auto max-w-5xl"-->
+<div>
 	<div class="mb-6">
 		<a href="/products" class="btn gap-2 btn-ghost">
 			<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
